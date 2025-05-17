@@ -2,6 +2,8 @@ import React from 'react';
 import { StyleSheet, View, Text, SafeAreaView, FlatList } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import COLORS from '../../theme/colors';
+import { HeaderCard } from '../../components/Header';
+import { IMAGES } from '../../assets';
 
 interface Agent {
   id: string;
@@ -32,10 +34,11 @@ const AgentsScreen = () => {
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar style="dark" />
-      <View style={styles.header}>
-        <Text style={styles.title}>CoinLab</Text>
-        <Text style={styles.subtitle}>Agentes</Text>
-      </View>
+      
+      <HeaderCard 
+        title="Agentes" 
+        backgroundImage={IMAGES.CARD_BACKGROUND}
+      />
       
       <View style={styles.content}>
         <Text style={styles.sectionTitle}>Agentes Disponibles</Text>
@@ -59,21 +62,6 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: COLORS.background,
-  },
-  header: {
-    padding: 20,
-    borderBottomWidth: 1,
-    borderBottomColor: COLORS.mediumGray,
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: COLORS.primary,
-    marginBottom: 5,
-  },
-  subtitle: {
-    fontSize: 18,
-    color: COLORS.text,
   },
   content: {
     flex: 1,
