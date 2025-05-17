@@ -1,6 +1,7 @@
 import React from 'react';
 import { StyleSheet, View, Text, SafeAreaView, FlatList } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
+import COLORS from '../../theme/colors';
 
 interface Agent {
   id: string;
@@ -30,7 +31,7 @@ const AgentsScreen = () => {
 
   return (
     <SafeAreaView style={styles.container}>
-      <StatusBar style="light" />
+      <StatusBar style="dark" />
       <View style={styles.header}>
         <Text style={styles.title}>CoinLab</Text>
         <Text style={styles.subtitle}>Agentes</Text>
@@ -57,22 +58,22 @@ const AgentsScreen = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#121212',
+    backgroundColor: COLORS.background,
   },
   header: {
     padding: 20,
     borderBottomWidth: 1,
-    borderBottomColor: '#333',
+    borderBottomColor: COLORS.mediumGray,
   },
   title: {
     fontSize: 24,
     fontWeight: 'bold',
-    color: '#FFD700',
+    color: COLORS.primary,
     marginBottom: 5,
   },
   subtitle: {
     fontSize: 18,
-    color: '#FFFFFF',
+    color: COLORS.text,
   },
   content: {
     flex: 1,
@@ -81,12 +82,12 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 20,
     fontWeight: 'bold',
-    color: '#FFFFFF',
+    color: COLORS.text,
     marginBottom: 10,
   },
   sectionDescription: {
     fontSize: 16,
-    color: '#CCCCCC',
+    color: COLORS.text,
     marginBottom: 20,
     lineHeight: 22,
   },
@@ -94,20 +95,22 @@ const styles = StyleSheet.create({
     paddingBottom: 20,
   },
   agentCard: {
-    backgroundColor: '#222',
+    backgroundColor: COLORS.lightGray,
     borderRadius: 10,
     padding: 15,
     marginBottom: 15,
+    borderWidth: 1,
+    borderColor: COLORS.mediumGray,
   },
   agentName: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: '#FFD700',
+    color: COLORS.primary,
     marginBottom: 8,
   },
   agentDescription: {
     fontSize: 14,
-    color: '#CCCCCC',
+    color: COLORS.text,
     marginBottom: 12,
     lineHeight: 20,
   },
@@ -119,12 +122,12 @@ const styles = StyleSheet.create({
     width: 10,
     height: 10,
     borderRadius: 5,
-    backgroundColor: '#4CAF50',
+    backgroundColor: COLORS.success,
     marginRight: 6,
   },
   statusText: {
     fontSize: 14,
-    color: '#4CAF50',
+    color: COLORS.success,
   },
 });
 

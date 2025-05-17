@@ -1,11 +1,12 @@
 import React from 'react';
 import { StyleSheet, View, Text, SafeAreaView, ScrollView } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
+import COLORS from '../../theme/colors';
 
 const HomeScreen = () => {
   return (
     <SafeAreaView style={styles.container}>
-      <StatusBar style="light" />
+      <StatusBar style="dark" />
       <View style={styles.header}>
         <Text style={styles.title}>CoinLab</Text>
         <Text style={styles.subtitle}>Home</Text>
@@ -52,42 +53,44 @@ const HomeScreen = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#121212',
+    backgroundColor: COLORS.background,
   },
   header: {
     padding: 20,
     borderBottomWidth: 1,
-    borderBottomColor: '#333',
+    borderBottomColor: COLORS.mediumGray,
   },
   title: {
     fontSize: 24,
     fontWeight: 'bold',
-    color: '#FFD700',
+    color: COLORS.primary,
     marginBottom: 5,
   },
   subtitle: {
     fontSize: 18,
-    color: '#FFFFFF',
+    color: COLORS.text,
   },
   content: {
     flex: 1,
     padding: 15,
   },
   card: {
-    backgroundColor: '#222',
+    backgroundColor: COLORS.lightGray,
     borderRadius: 10,
     padding: 20,
     marginBottom: 20,
+    borderWidth: 1,
+    borderColor: COLORS.mediumGray,
   },
   cardTitle: {
     fontSize: 20,
     fontWeight: 'bold',
-    color: '#FFFFFF',
+    color: COLORS.text,
     marginBottom: 10,
   },
   cardText: {
     fontSize: 16,
-    color: '#CCCCCC',
+    color: COLORS.text,
     lineHeight: 24,
   },
   featuresContainer: {
@@ -96,24 +99,26 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 20,
     fontWeight: 'bold',
-    color: '#FFFFFF',
+    color: COLORS.text,
     marginBottom: 15,
   },
   featureCard: {
-    backgroundColor: '#222',
+    backgroundColor: COLORS.lightGray,
     borderRadius: 10,
     padding: 15,
     marginBottom: 15,
+    borderWidth: 1,
+    borderColor: COLORS.mediumGray,
   },
   featureTitle: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: '#FFD700',
+    color: COLORS.primary,
     marginBottom: 8,
   },
   featureText: {
     fontSize: 14,
-    color: '#CCCCCC',
+    color: COLORS.text,
     lineHeight: 22,
   },
 });

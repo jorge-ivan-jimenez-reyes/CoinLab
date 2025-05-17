@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { StyleSheet, View, Text, TextInput, TouchableOpacity, SafeAreaView, KeyboardAvoidingView, Platform, ScrollView } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { useAuth } from '../../context/AuthContext';
+import COLORS from '../../theme/colors';
 
 interface RegisterScreenProps {
   navigation: any;
@@ -22,7 +23,7 @@ const RegisterScreen: React.FC<RegisterScreenProps> = ({ navigation }) => {
 
   return (
     <SafeAreaView style={styles.container}>
-      <StatusBar style="light" />
+      <StatusBar style="dark" />
       <KeyboardAvoidingView 
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={styles.keyboardView}
@@ -43,7 +44,7 @@ const RegisterScreen: React.FC<RegisterScreenProps> = ({ navigation }) => {
               <TextInput
                 style={styles.input}
                 placeholder="Tu nombre"
-                placeholderTextColor="#666"
+                placeholderTextColor={COLORS.mediumGray}
                 value={name}
                 onChangeText={setName}
               />
@@ -54,7 +55,7 @@ const RegisterScreen: React.FC<RegisterScreenProps> = ({ navigation }) => {
               <TextInput
                 style={styles.input}
                 placeholder="correo@ejemplo.com"
-                placeholderTextColor="#666"
+                placeholderTextColor={COLORS.mediumGray}
                 value={email}
                 onChangeText={setEmail}
                 keyboardType="email-address"
@@ -67,7 +68,7 @@ const RegisterScreen: React.FC<RegisterScreenProps> = ({ navigation }) => {
               <TextInput
                 style={styles.input}
                 placeholder="Contraseña"
-                placeholderTextColor="#666"
+                placeholderTextColor={COLORS.mediumGray}
                 value={password}
                 onChangeText={setPassword}
                 secureTextEntry
@@ -79,7 +80,7 @@ const RegisterScreen: React.FC<RegisterScreenProps> = ({ navigation }) => {
               <TextInput
                 style={styles.input}
                 placeholder="Confirma tu contraseña"
-                placeholderTextColor="#666"
+                placeholderTextColor={COLORS.mediumGray}
                 value={confirmPassword}
                 onChangeText={setConfirmPassword}
                 secureTextEntry
@@ -106,7 +107,7 @@ const RegisterScreen: React.FC<RegisterScreenProps> = ({ navigation }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#121212',
+    backgroundColor: COLORS.background,
   },
   keyboardView: {
     flex: 1,
@@ -122,7 +123,7 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 32,
     fontWeight: 'bold',
-    color: '#FFD700',
+    color: COLORS.primary,
     marginBottom: 10,
   },
   formContainer: {
@@ -133,7 +134,7 @@ const styles = StyleSheet.create({
   subtitle: {
     fontSize: 24,
     fontWeight: 'bold',
-    color: '#FFFFFF',
+    color: COLORS.text,
     marginBottom: 20,
     textAlign: 'center',
   },
@@ -142,25 +143,27 @@ const styles = StyleSheet.create({
   },
   label: {
     fontSize: 16,
-    color: '#FFFFFF',
+    color: COLORS.text,
     marginBottom: 8,
   },
   input: {
-    backgroundColor: '#2A2A2A',
+    backgroundColor: COLORS.lightGray,
     borderRadius: 8,
     padding: 15,
-    color: '#FFFFFF',
+    color: COLORS.text,
     fontSize: 16,
+    borderWidth: 1,
+    borderColor: COLORS.mediumGray,
   },
   button: {
-    backgroundColor: '#FFD700',
+    backgroundColor: COLORS.primary,
     borderRadius: 8,
     padding: 15,
     alignItems: 'center',
     marginTop: 20,
   },
   buttonText: {
-    color: '#000000',
+    color: COLORS.white,
     fontSize: 16,
     fontWeight: 'bold',
   },
@@ -171,11 +174,11 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   footerText: {
-    color: '#CCCCCC',
+    color: COLORS.text,
     fontSize: 14,
   },
   linkText: {
-    color: '#FFD700',
+    color: COLORS.primary,
     fontSize: 14,
     fontWeight: 'bold',
   },

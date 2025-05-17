@@ -1,6 +1,7 @@
 import React from 'react';
 import { StyleSheet, View, Text, SafeAreaView, FlatList } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
+import COLORS from '../../theme/colors';
 
 interface Transaction {
   id: string;
@@ -62,7 +63,7 @@ const HistoryScreen = () => {
         <Text 
           style={[
             styles.transactionType, 
-            { color: item.type === 'buy' ? '#4CAF50' : '#F44336' }
+            { color: item.type === 'buy' ? COLORS.success : COLORS.error }
           ]}
         >
           {item.type === 'buy' ? 'Compra' : 'Venta'}
@@ -90,7 +91,7 @@ const HistoryScreen = () => {
 
   return (
     <SafeAreaView style={styles.container}>
-      <StatusBar style="light" />
+      <StatusBar style="dark" />
       <View style={styles.header}>
         <Text style={styles.title}>CoinLab</Text>
         <Text style={styles.subtitle}>Historial</Text>
@@ -117,22 +118,22 @@ const HistoryScreen = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#121212',
+    backgroundColor: COLORS.background,
   },
   header: {
     padding: 20,
     borderBottomWidth: 1,
-    borderBottomColor: '#333',
+    borderBottomColor: COLORS.mediumGray,
   },
   title: {
     fontSize: 24,
     fontWeight: 'bold',
-    color: '#FFD700',
+    color: COLORS.primary,
     marginBottom: 5,
   },
   subtitle: {
     fontSize: 18,
-    color: '#FFFFFF',
+    color: COLORS.text,
   },
   content: {
     flex: 1,
@@ -141,12 +142,12 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 20,
     fontWeight: 'bold',
-    color: '#FFFFFF',
+    color: COLORS.text,
     marginBottom: 10,
   },
   sectionDescription: {
     fontSize: 16,
-    color: '#CCCCCC',
+    color: COLORS.text,
     marginBottom: 20,
     lineHeight: 22,
   },
@@ -154,10 +155,12 @@ const styles = StyleSheet.create({
     paddingBottom: 20,
   },
   transactionCard: {
-    backgroundColor: '#222',
+    backgroundColor: COLORS.lightGray,
     borderRadius: 10,
     padding: 15,
     marginBottom: 15,
+    borderWidth: 1,
+    borderColor: COLORS.mediumGray,
   },
   transactionHeader: {
     flexDirection: 'row',
@@ -168,7 +171,7 @@ const styles = StyleSheet.create({
   coinName: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: '#FFFFFF',
+    color: COLORS.text,
   },
   transactionType: {
     fontSize: 16,
@@ -176,7 +179,7 @@ const styles = StyleSheet.create({
   },
   transactionDetails: {
     borderTopWidth: 1,
-    borderTopColor: '#333',
+    borderTopColor: COLORS.mediumGray,
     paddingTop: 12,
   },
   detailRow: {
@@ -186,11 +189,11 @@ const styles = StyleSheet.create({
   },
   detailLabel: {
     fontSize: 14,
-    color: '#999',
+    color: COLORS.mediumGray,
   },
   detailValue: {
     fontSize: 14,
-    color: '#FFFFFF',
+    color: COLORS.text,
     fontWeight: '500',
   },
 });

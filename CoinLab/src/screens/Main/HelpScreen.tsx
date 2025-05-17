@@ -1,6 +1,7 @@
 import React from 'react';
 import { StyleSheet, View, Text, SafeAreaView, ScrollView, TouchableOpacity } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
+import COLORS from '../../theme/colors';
 
 interface FAQItem {
   id: string;
@@ -34,7 +35,7 @@ const faqData: FAQItem[] = [
 const HelpScreen = () => {
   return (
     <SafeAreaView style={styles.container}>
-      <StatusBar style="light" />
+      <StatusBar style="dark" />
       <View style={styles.header}>
         <Text style={styles.title}>CoinLab</Text>
         <Text style={styles.subtitle}>Ayuda</Text>
@@ -68,22 +69,22 @@ const HelpScreen = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#121212',
+    backgroundColor: COLORS.background,
   },
   header: {
     padding: 20,
     borderBottomWidth: 1,
-    borderBottomColor: '#333',
+    borderBottomColor: COLORS.mediumGray,
   },
   title: {
     fontSize: 24,
     fontWeight: 'bold',
-    color: '#FFD700',
+    color: COLORS.primary,
     marginBottom: 5,
   },
   subtitle: {
     fontSize: 18,
-    color: '#FFFFFF',
+    color: COLORS.text,
   },
   content: {
     flex: 1,
@@ -92,25 +93,27 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 20,
     fontWeight: 'bold',
-    color: '#FFFFFF',
+    color: COLORS.text,
     marginBottom: 15,
     marginTop: 10,
   },
   faqItem: {
-    backgroundColor: '#222',
+    backgroundColor: COLORS.lightGray,
     borderRadius: 10,
     padding: 15,
     marginBottom: 15,
+    borderWidth: 1,
+    borderColor: COLORS.mediumGray,
   },
   question: {
     fontSize: 16,
     fontWeight: 'bold',
-    color: '#FFD700',
+    color: COLORS.primary,
     marginBottom: 8,
   },
   answer: {
     fontSize: 14,
-    color: '#CCCCCC',
+    color: COLORS.text,
     lineHeight: 22,
   },
   contactSection: {
@@ -119,18 +122,18 @@ const styles = StyleSheet.create({
   },
   contactText: {
     fontSize: 14,
-    color: '#CCCCCC',
+    color: COLORS.text,
     marginBottom: 20,
     lineHeight: 20,
   },
   contactButton: {
-    backgroundColor: '#FFD700',
+    backgroundColor: COLORS.primary,
     borderRadius: 8,
     padding: 15,
     alignItems: 'center',
   },
   contactButtonText: {
-    color: '#000000',
+    color: COLORS.white,
     fontSize: 16,
     fontWeight: 'bold',
   },
