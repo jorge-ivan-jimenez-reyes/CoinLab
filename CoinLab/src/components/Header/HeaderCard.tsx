@@ -67,7 +67,7 @@ const HeaderCard: React.FC<HeaderCardProps> = ({
   const dragY = useRef(new Animated.Value(0)).current;
   
   // Opacidad animada para la información financiera
-  const infoOpacity = useRef(new Animated.Value(0)).current;
+  const infoOpacity = useRef(new Animated.Value(expanded ? 1 : 0)).current;
   
   // Notificar altura actual al padre - evitar notificaciones innecesarias
   const notifyHeightChange = (height: number) => {
@@ -141,12 +141,15 @@ const HeaderCard: React.FC<HeaderCardProps> = ({
       }
     }
 
-    heightAnim.setValue(COLLAPSED_HEIGHT);
-    lastNotifiedHeight.current = COLLAPSED_HEIGHT;
-    infoOpacity.setValue(0); // Comenzar oculto
+    // Iniciar expandido por defecto para mostrar toda la información
+    setExpanded(true);
+    
+    heightAnim.setValue(EXPANDED_HEIGHT);
+    lastNotifiedHeight.current = EXPANDED_HEIGHT;
+    infoOpacity.setValue(1); // Comenzar visible
     
     // Notificar altura inicial
-    notifyHeightChange(COLLAPSED_HEIGHT);
+    notifyHeightChange(EXPANDED_HEIGHT);
     
     // Actualizar alturas si cambian las dimensiones
     const handleDimensionsChange = () => {
@@ -243,6 +246,19 @@ const HeaderCard: React.FC<HeaderCardProps> = ({
       extrapolate: 'clamp',
     })
   );
+  
+  // Animación de la sombra y border radius
+  const shadowOpacity = heightAnim.interpolate({
+    inputRange: [COLLAPSED_HEIGHT, EXPANDED_HEIGHT],
+    outputRange: [0.3, 0],
+    extrapolate: 'clamp'
+  });
+  
+  const borderRadius = heightAnim.interpolate({
+    inputRange: [COLLAPSED_HEIGHT, EXPANDED_HEIGHT],
+    outputRange: [20, 30],
+    extrapolate: 'clamp'
+  });
 
   // Componentes Animados
   const AnimatedImageBackground = Animated.createAnimatedComponent(ImageBackground);
@@ -252,14 +268,32 @@ const HeaderCard: React.FC<HeaderCardProps> = ({
     <Animated.View 
       style={[
         styles.absoluteContainer,
-        { height: dynamicHeight } 
+        { 
+          height: dynamicHeight,
+          shadowOpacity: shadowOpacity,
+          borderBottomLeftRadius: borderRadius,
+          borderBottomRightRadius: borderRadius 
+        } 
       ]}
     >
       {backgroundImage ? (
         <AnimatedImageBackground
           source={backgroundImage}
-          style={[styles.cardContainer, { height: dynamicHeight }]}
-          imageStyle={styles.backgroundImage}
+          style={[
+            styles.cardContainer, 
+            { 
+              height: dynamicHeight,
+              borderBottomLeftRadius: borderRadius,
+              borderBottomRightRadius: borderRadius
+            }
+          ]}
+          imageStyle={[
+            styles.backgroundImage,
+            {
+              borderBottomLeftRadius: borderRadius,
+              borderBottomRightRadius: borderRadius
+            }
+          ]}
           resizeMode="cover"
         >
           <View style={styles.contentWrapper}>
@@ -292,10 +326,13 @@ const HeaderCard: React.FC<HeaderCardProps> = ({
               <Animated.View 
                 style={[
                   styles.financialInfoContainer,
-                  { opacity: infoOpacity, height: infoOpacity.interpolate({
-                    inputRange: [0, 1],
-                    outputRange: [0, 100]
-                  }) }
+                  { 
+                    opacity: infoOpacity, 
+                    maxHeight: infoOpacity.interpolate({
+                      inputRange: [0, 1],
+                      outputRange: [0, 200]
+                    }) 
+                  }
                 ]}
               >
                 <Text style={styles.titleText}>{title}</Text>
@@ -315,7 +352,14 @@ const HeaderCard: React.FC<HeaderCardProps> = ({
           colors={GRADIENT_COLORS}
           start={{ x: 0, y: 0 }}
           end={{ x: 0, y: 1 }}
-          style={[styles.cardContainer, { height: dynamicHeight }]}
+          style={[
+            styles.cardContainer, 
+            { 
+              height: dynamicHeight,
+              borderBottomLeftRadius: borderRadius,
+              borderBottomRightRadius: borderRadius
+            }
+          ]}
         >
           <View style={styles.contentWrapper}>
             <View style={styles.innerContent}>
@@ -347,10 +391,13 @@ const HeaderCard: React.FC<HeaderCardProps> = ({
               <Animated.View 
                 style={[
                   styles.financialInfoContainer,
-                  { opacity: infoOpacity, height: infoOpacity.interpolate({
-                    inputRange: [0, 1],
-                    outputRange: [0, 100]
-                  }) }
+                  { 
+                    opacity: infoOpacity, 
+                    maxHeight: infoOpacity.interpolate({
+                      inputRange: [0, 1],
+                      outputRange: [0, 200]
+                    }) 
+                  }
                 ]}
               >
                 <Text style={styles.titleText}>{title}</Text>
@@ -383,50 +430,45 @@ const HeaderCard: React.FC<HeaderCardProps> = ({
 const styles = StyleSheet.create({
   absoluteContainer: {
     width: '100%',
-    zIndex: 10,
+    zIndex: 999, // Incrementar el z-index para estar encima de todo
     overflow: 'visible',
     position: 'absolute',
     top: -NOTCH_SPACE, // Posición negativa para cubrir el notch
     left: 0,
     right: 0,
     marginTop: 0,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 5 },
+    shadowRadius: 8,
+    elevation: 8,
   },
   contentWrapper: {
     flex: 1,
     width: '100%',
-    paddingTop: NOTCH_SPACE, // Compensar la posición negativa
+    paddingTop: NOTCH_SPACE + 5, // Aumentar ligeramente para evitar cortes en iOS
   },
   innerContent: {
     flex: 1,
     padding: 16,
-    paddingTop: IS_IOS ? 16 : 12,
+    paddingTop: IS_IOS ? 20 : 16, // Más espacio en la parte superior
   },
   cardContainer: {
     width: '100%',
     borderRadius: 0,
     borderTopLeftRadius: 0,
     borderTopRightRadius: 0,
-    borderBottomLeftRadius: 20,
-    borderBottomRightRadius: 20,
     overflow: 'hidden',
-    elevation: 8,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 5 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
   },
   backgroundImage: {
     width: '100%',
     height: '100%',
-    borderBottomLeftRadius: 20,
-    borderBottomRightRadius: 20,
   },
   topSection: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 12,
-    minHeight: 32,
+    marginBottom: 16, // Aumentar espacio
+    minHeight: 40, // Aumentar altura mínima
   },
   leftSection: {
     flexDirection: 'row',
@@ -438,20 +480,20 @@ const styles = StyleSheet.create({
     alignItems: 'flex-end',
   },
   navButton: {
-    padding: 5,
+    padding: 8, // Aumentar área táctil
   },
   profileButton: {
-    padding: 5,
+    padding: 8, // Aumentar área táctil
   },
   dragIndicator: {
     position: 'absolute',
-    bottom: 0,
+    bottom: 8,
     alignSelf: 'center',
     width: 70,
     height: 4,
     borderRadius: 4,
-    backgroundColor: 'rgba(255, 255, 255, 0.3)',
-    zIndex: 101,
+    backgroundColor: 'rgba(255, 255, 255, 0.5)', // Más visible
+    zIndex: 1001,
   },
   expandTouchArea: {
     position: 'absolute',
@@ -461,44 +503,47 @@ const styles = StyleSheet.create({
     height: 40,
     alignItems: 'center',
     justifyContent: 'center',
-    zIndex: 101,
+    zIndex: 1001,
   },
   financialInfoContainer: {
     alignItems: 'center',
     justifyContent: 'center',
-    marginTop: 6,
-    marginBottom: 12,
-    overflow: 'hidden',
+    marginTop: 20, // Más espacio arriba
+    marginBottom: 20, // Más espacio abajo
+    overflow: 'visible', // Cambiar a visible para evitar recortes
   },
   titleText: {
     color: COLORS.white,
     fontSize: 16,
     opacity: 0.8,
-    marginBottom: 8,
+    marginBottom: 10, // Aumentar espacio
   },
   amountContainer: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    marginVertical: 6,
+    marginVertical: 10, // Aumentar espacio
   },
   amountText: {
     color: COLORS.white,
-    fontSize: 42, // Tamaño aumentado
+    fontSize: 42,
     fontWeight: 'bold',
+    includeFontPadding: false, // Evitar recortes en el texto
   },
   currencyText: {
     color: COLORS.white,
-    fontSize: 20, // Tamaño aumentado
+    fontSize: 20,
     opacity: 0.9,
     alignSelf: 'flex-end',
     marginBottom: 5,
+    includeFontPadding: false, // Evitar recortes en el texto
   },
   profitLabel: {
     color: COLORS.white,
-    fontSize: 18, // Tamaño aumentado
+    fontSize: 18,
     opacity: 0.8,
-    marginTop: 8,
+    marginTop: 10, // Aumentar espacio
+    includeFontPadding: false, // Evitar recortes en el texto
   },
 });
 
