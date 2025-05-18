@@ -16,5 +16,9 @@ export const GRADIENTS = {
 export const IMAGES = {
   CARD_BACKGROUND: require('./card.png'),
   LOGO: require('./logo.png'),
+  // Cryptocurrency icons
+  BITCOIN: require('./bitcoin.png'),
+  ETHEREUM: require('./etherum.png'),
+  USER_ICON: require('./user.png'),
   // Otras imágenes que puedas necesitar en el futuro
 }; 
