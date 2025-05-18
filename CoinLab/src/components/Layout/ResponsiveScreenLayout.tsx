@@ -1,18 +1,18 @@
 import React, { useState, useEffect } from 'react';
-import { View, StyleSheet, SafeAreaView, Dimensions, Platform, StatusBar } from 'react-native';
+import { View, SafeAreaView, Dimensions, Platform, StatusBar, StyleSheet } from 'react-native';
 import { HeaderCard } from '../Header';
 import { useHeader } from '../../context/HeaderContext';
 import COLORS from '../../theme/colors';
 
 // Obtener dimensiones para hacer el header responsivo
-const { height } = Dimensions.get('window');
+const { height, width } = Dimensions.get('window');
 // Calcular la altura para los estados contraído y expandido
 const COLLAPSED_HEIGHT = Math.min(height * 0.08, 70) + (Platform.OS === 'ios' ? 44 : StatusBar.currentHeight || 0);
 const EXPANDED_HEIGHT = height * 0.38 + (Platform.OS === 'ios' ? 44 : StatusBar.currentHeight || 0);
 // Margen superior para evitar la barra de estado
 const STATUS_BAR_HEIGHT = Platform.OS === 'ios' ? 44 : StatusBar.currentHeight || 0;
 // Padding adicional para asegurar que los elementos no se corten
-const SAFE_PADDING = 0;
+const SAFE_PADDING = 15;
 
 interface ResponsiveScreenLayoutProps {
   children: React.ReactNode;
@@ -65,30 +65,12 @@ const ResponsiveScreenLayout: React.FC<ResponsiveScreenLayoutProps> = ({
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <View style={styles.container}>
       <StatusBar 
         translucent 
         backgroundColor="transparent" 
         barStyle="light-content" 
       />
-      
-      {/* Vista con padding superior para reservar espacio para el header */}
-      <View 
-        style={[
-          styles.content, 
-          { 
-            paddingTop: headerSpacing - 12, // Aumentar más la resta para eliminar cualquier espacio restante
-            paddingHorizontal: contentPadding,
-            paddingBottom: 0,
-            backgroundColor: COLORS.background,
-            borderTopWidth: 0,
-            borderWidth: 0,
-            marginTop: -10, // Añadir margen negativo para subir el contenido
-          }
-        ]}
-      >
-        {children}
-      </View>
       
       {/* Header que se coloca encima usando position:absolute */}
       <View style={styles.headerContainer}>
@@ -96,7 +78,7 @@ const ResponsiveScreenLayout: React.FC<ResponsiveScreenLayoutProps> = ({
           title={title}
           showBackButton={showBackButton}
           onBackPress={onBackPress}
-          backgroundImage={backgroundImage}
+          backgroundImage={backgroundImage || require('../../assets/card.png')}
           amount={amount}
           amountLabel={amountLabel}
           profit={profit}
@@ -106,27 +88,48 @@ const ResponsiveScreenLayout: React.FC<ResponsiveScreenLayoutProps> = ({
           onHeightChange={handleHeaderHeightChange}
         />
       </View>
-    </SafeAreaView>
+      
+      {/* Vista con padding superior para reservar espacio para el header */}
+      <View 
+        style={[
+          styles.content,
+          {
+            paddingTop: headerSpacing + 25,
+            paddingHorizontal: contentPadding,
+          }
+        ]}
+      >
+        {children}
+      </View>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    width: '100%',
     backgroundColor: COLORS.background,
-  },
-  headerContainer: {
-    position: 'absolute',
-    top: STATUS_BAR_HEIGHT,
-    left: 0,
-    right: 0,
-    zIndex: 10,
-    backgroundColor: COLORS.background,
-    borderBottomWidth: 0,
+    position: 'relative',
   },
   content: {
     flex: 1,
-    borderTopWidth: 0,
+    width: '100%',
+    backgroundColor: COLORS.background,
+    marginTop: 0,
+    paddingBottom: 20,
+    zIndex: 1,
+  },
+  headerContainer: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    width: '100%',
+    zIndex: 10,
+    overflow: 'visible',
+    backgroundColor: 'transparent',
+    borderWidth: 0,
   },
 });
 
