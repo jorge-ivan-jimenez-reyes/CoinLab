@@ -5,6 +5,7 @@ import { useNavigation } from '@react-navigation/native';
 import { LinearGradient } from 'expo-linear-gradient';
 import COLORS from '../../theme/colors';
 import { useHeader } from '../../context/HeaderContext';
+import { useAuth } from '../../context/AuthContext';
 
 // Obtener las dimensiones de la pantalla y ajustar dinámicamente
 const { width, height } = Dimensions.get('window');
@@ -69,9 +70,10 @@ const HeaderCard: React.FC<HeaderCardProps> = ({
   currencySymbol = '$',
   hideStatusBar = true, // Ocultar barra de estado por defecto
 }) => {
-  const navigation = useNavigation();
+  const navigation = useNavigation<any>();
   // Usar el contexto global en lugar del estado local
   const { isHeaderExpanded, toggleHeader } = useHeader();
+  const { isAuthenticated } = useAuth();
   // Mantenemos una referencia al estado expandido del contexto
   const expanded = isHeaderExpanded;
   
@@ -237,7 +239,15 @@ const HeaderCard: React.FC<HeaderCardProps> = ({
 
   const handleProfilePress = () => {
     console.log('Navegar al perfil');
-    // navigation.navigate('Profile');
+    if (!isAuthenticated) {
+      navigation.reset({
+        index: 0,
+        routes: [{ name: 'Auth' }],
+      });
+    } else {
+      // Aquí puedes agregar navegación al perfil cuando se implemente
+      // navigation.navigate('Profile');
+    }
   };
   
   // Calcular altura dinámica basada en arrastre
@@ -311,7 +321,7 @@ const HeaderCard: React.FC<HeaderCardProps> = ({
         }}
       >
         <AnimatedImageBackground
-          source={DEFAULT_BACKGROUND_IMAGE}
+          source={backgroundImage || DEFAULT_BACKGROUND_IMAGE}
           style={[styles.cardContainer, { height: dynamicHeight }]}
           imageStyle={styles.backgroundImage}
           resizeMode="cover"
@@ -364,7 +374,9 @@ const HeaderCard: React.FC<HeaderCardProps> = ({
                   <Text style={styles.profitPercentage}>{profitPercentage}</Text>
                 ) : null}
                 
-                <Text style={styles.titleText}>{title}</Text>
+                {title ? (
+                  <Text style={styles.titleText}>{title}</Text>
+                ) : null}
               </Animated.View>
             </View>
           </View>

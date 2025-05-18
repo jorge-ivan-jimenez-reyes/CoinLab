@@ -1,8 +1,12 @@
 import React, { useState } from 'react';
-import { StyleSheet, View, Text, TextInput, TouchableOpacity, SafeAreaView, KeyboardAvoidingView, Platform, ScrollView } from 'react-native';
+import { StyleSheet, View, Text, TextInput, TouchableOpacity, SafeAreaView, Image, Dimensions, KeyboardAvoidingView, Platform, ScrollView } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { useAuth } from '../../context/AuthContext';
 import COLORS from '../../theme/colors';
+import { IMAGES } from '../../assets';
+import { Ionicons } from 'react-native-vector-icons';
+
+const { width, height } = Dimensions.get('window');
 
 interface RegisterScreenProps {
   navigation: any;
@@ -22,164 +26,215 @@ const RegisterScreen: React.FC<RegisterScreenProps> = ({ navigation }) => {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
-      <StatusBar style="dark" />
-      <KeyboardAvoidingView 
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        style={styles.keyboardView}
-      >
-        <ScrollView 
-          contentContainerStyle={styles.scrollView}
-          showsVerticalScrollIndicator={false}
+    <View style={styles.container}>
+      <StatusBar style="light" />
+      
+      {/* Imagen de puntos en las esquinas */}
+      <Image 
+        source={IMAGES.LOGIN_DOTS} 
+        style={styles.dotsBackground}
+        resizeMode="cover"
+      />
+      
+      <SafeAreaView style={styles.safeArea}>
+        <KeyboardAvoidingView 
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+          style={styles.keyboardView}
         >
-          <View style={styles.header}>
-            <Text style={styles.title}>CoinLab</Text>
-          </View>
-          
-          <View style={styles.formContainer}>
-            <Text style={styles.subtitle}>Crear Cuenta</Text>
-            
-            <View style={styles.inputContainer}>
-              <Text style={styles.label}>Nombre completo</Text>
-              <TextInput
-                style={styles.input}
-                placeholder="Tu nombre"
-                placeholderTextColor={COLORS.mediumGray}
-                value={name}
-                onChangeText={setName}
-              />
-            </View>
-            
-            <View style={styles.inputContainer}>
-              <Text style={styles.label}>Correo electrónico</Text>
-              <TextInput
-                style={styles.input}
-                placeholder="correo@ejemplo.com"
-                placeholderTextColor={COLORS.mediumGray}
-                value={email}
-                onChangeText={setEmail}
-                keyboardType="email-address"
-                autoCapitalize="none"
-              />
-            </View>
-            
-            <View style={styles.inputContainer}>
-              <Text style={styles.label}>Contraseña</Text>
-              <TextInput
-                style={styles.input}
-                placeholder="Contraseña"
-                placeholderTextColor={COLORS.mediumGray}
-                value={password}
-                onChangeText={setPassword}
-                secureTextEntry
-              />
-            </View>
-            
-            <View style={styles.inputContainer}>
-              <Text style={styles.label}>Confirmar contraseña</Text>
-              <TextInput
-                style={styles.input}
-                placeholder="Confirma tu contraseña"
-                placeholderTextColor={COLORS.mediumGray}
-                value={confirmPassword}
-                onChangeText={setConfirmPassword}
-                secureTextEntry
-              />
-            </View>
-            
-            <TouchableOpacity style={styles.button} onPress={handleRegister}>
-              <Text style={styles.buttonText}>Crear Cuenta</Text>
+          <ScrollView 
+            contentContainerStyle={styles.scrollView}
+            showsVerticalScrollIndicator={false}
+            keyboardShouldPersistTaps="handled"
+          >
+            <TouchableOpacity 
+              style={styles.backButton} 
+              onPress={() => navigation.goBack()}
+            >
+              <Ionicons name="arrow-back" size={24} color="#FFFFFF" />
             </TouchableOpacity>
             
-            <View style={styles.footer}>
-              <Text style={styles.footerText}>¿Ya tienes una cuenta? </Text>
-              <TouchableOpacity onPress={() => navigation.navigate('Login')}>
-                <Text style={styles.linkText}>Inicia sesión</Text>
-              </TouchableOpacity>
+            {/* Logo */}
+            <View style={styles.logoContainer}>
+              <Image source={IMAGES.LOGO} style={styles.logo} resizeMode="contain" />
             </View>
-          </View>
-        </ScrollView>
-      </KeyboardAvoidingView>
-    </SafeAreaView>
+            
+            <View style={styles.header}>
+              <Text style={styles.title}>Crear Cuenta</Text>
+            </View>
+            
+            <View style={styles.formContainer}>
+              <View style={styles.inputContainer}>
+                <Ionicons name="person-outline" size={22} color="#FFFFFF" style={styles.inputIcon} />
+                <TextInput
+                  style={styles.input}
+                  placeholder="Nombre completo"
+                  placeholderTextColor="#AAAAAA"
+                  value={name}
+                  onChangeText={setName}
+                  selectionColor="#FFFFFF"
+                />
+              </View>
+              
+              <View style={styles.inputContainer}>
+                <Ionicons name="mail-outline" size={22} color="#FFFFFF" style={styles.inputIcon} />
+                <TextInput
+                  style={styles.input}
+                  placeholder="Correo electrónico"
+                  placeholderTextColor="#AAAAAA"
+                  value={email}
+                  onChangeText={setEmail}
+                  keyboardType="email-address"
+                  autoCapitalize="none"
+                  selectionColor="#FFFFFF"
+                />
+              </View>
+              
+              <View style={styles.inputContainer}>
+                <Ionicons name="lock-closed-outline" size={22} color="#FFFFFF" style={styles.inputIcon} />
+                <TextInput
+                  style={styles.input}
+                  placeholder="Contraseña"
+                  placeholderTextColor="#AAAAAA"
+                  value={password}
+                  onChangeText={setPassword}
+                  secureTextEntry
+                  selectionColor="#FFFFFF"
+                />
+              </View>
+              
+              <View style={styles.inputContainer}>
+                <Ionicons name="shield-checkmark-outline" size={22} color="#FFFFFF" style={styles.inputIcon} />
+                <TextInput
+                  style={styles.input}
+                  placeholder="Confirmar contraseña"
+                  placeholderTextColor="#AAAAAA"
+                  value={confirmPassword}
+                  onChangeText={setConfirmPassword}
+                  secureTextEntry
+                  selectionColor="#FFFFFF"
+                />
+              </View>
+              
+              <TouchableOpacity style={styles.registerButton} onPress={handleRegister}>
+                <Text style={styles.registerButtonText}>Crear Cuenta</Text>
+              </TouchableOpacity>
+              
+              <View style={styles.footer}>
+                <Text style={styles.footerText}>¿Ya tienes una cuenta? </Text>
+                <TouchableOpacity onPress={() => navigation.navigate('Login')}>
+                  <Text style={styles.linkText}>Inicia sesión</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </ScrollView>
+        </KeyboardAvoidingView>
+      </SafeAreaView>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: COLORS.background,
+    backgroundColor: '#25252A',
+  },
+  safeArea: {
+    flex: 1,
   },
   keyboardView: {
     flex: 1,
   },
   scrollView: {
     flexGrow: 1,
+    paddingHorizontal: 25,
+    paddingTop: 40,
+    paddingBottom: 30,
+  },
+  dotsBackground: {
+    position: 'absolute',
+    width: '100%',
+    height: '100%',
+    opacity: 1,
+  },
+  backButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 20,
+  },
+  logoContainer: {
+    alignItems: 'center',
+    marginBottom: 30,
+  },
+  logo: {
+    width: width * 0.4,
+    height: height * 0.1,
   },
   header: {
     alignItems: 'center',
-    padding: 20,
-    marginTop: 20,
+    marginBottom: 30,
   },
   title: {
-    fontSize: 32,
+    fontSize: 28,
     fontWeight: 'bold',
-    color: COLORS.primary,
-    marginBottom: 10,
+    color: '#FFFFFF',
   },
   formContainer: {
-    flex: 1,
-    padding: 20,
-    justifyContent: 'center',
-  },
-  subtitle: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: COLORS.text,
-    marginBottom: 20,
-    textAlign: 'center',
+    width: '100%',
+    alignItems: 'center',
   },
   inputContainer: {
-    marginBottom: 16,
+    flexDirection: 'row',
+    alignItems: 'center',
+    width: '100%',
+    height: 55,
+    borderBottomWidth: 1,
+    borderBottomColor: '#FFFFFF',
+    marginBottom: 20,
   },
-  label: {
-    fontSize: 16,
-    color: COLORS.text,
-    marginBottom: 8,
+  inputIcon: {
+    marginRight: 10,
   },
   input: {
-    backgroundColor: COLORS.lightGray,
-    borderRadius: 8,
-    padding: 15,
-    color: COLORS.text,
+    flex: 1,
+    height: '100%',
+    color: '#FFFFFF',
     fontSize: 16,
-    borderWidth: 1,
-    borderColor: COLORS.mediumGray,
   },
-  button: {
-    backgroundColor: COLORS.primary,
-    borderRadius: 8,
-    padding: 15,
+  registerButton: {
+    backgroundColor: '#2F3293',
+    width: '100%',
+    height: 55,
+    borderRadius: 30,
+    justifyContent: 'center',
     alignItems: 'center',
-    marginTop: 20,
+    marginTop: 30,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 5,
+    elevation: 5,
   },
-  buttonText: {
-    color: COLORS.white,
-    fontSize: 16,
+  registerButtonText: {
+    color: '#FFFFFF',
+    fontSize: 18,
     fontWeight: 'bold',
   },
   footer: {
     flexDirection: 'row',
     justifyContent: 'center',
-    marginTop: 20,
-    marginBottom: 20,
+    marginTop: 30,
   },
   footerText: {
-    color: COLORS.text,
-    fontSize: 14,
+    color: '#AAAAAA',
+    fontSize: 15,
   },
   linkText: {
-    color: COLORS.primary,
-    fontSize: 14,
+    color: '#FFFFFF',
+    fontSize: 15,
     fontWeight: 'bold',
   },
 });

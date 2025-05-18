@@ -13,11 +13,12 @@ import { useNavigation } from '@react-navigation/native';
 import COLORS from '../../theme/colors';
 import HeaderCard from '../../components/Header/HeaderCard';
 import { IMAGES } from '../../assets';
+import { useData } from '../../context/DataContext';
 
-// Sample user data - in a real app, this would come from a context or props
-const userData = {
-  name: 'Jose Manuel',
-};
+// Remove hardcoded user data
+// const userData = {
+//   name: 'Jose Manuel',
+// };
 
 interface AccordionItemProps {
   title: string;
@@ -58,6 +59,7 @@ const AccordionItem: React.FC<AccordionItemProps> = ({
 
 const HelpScreen: React.FC = () => {
   const navigation = useNavigation();
+  const { user } = useData(); // Use the DataContext to get user info
   const [openSections, setOpenSections] = useState<{[key: string]: boolean}>({
     agents: true,
     banking: false,
@@ -81,8 +83,8 @@ const HelpScreen: React.FC = () => {
       <StatusBar barStyle="light-content" backgroundColor="#171717" />
       
       <HeaderCard 
-        title="Como te podemos ayudar hoy?"
-        amount={userData.name}
+        title="¿Cómo te podemos ayudar hoy?"
+        amount={user.name}
         amountLabel=""
         profit=""
         showBackButton={true}
