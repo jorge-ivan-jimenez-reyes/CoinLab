@@ -1,5 +1,5 @@
 import React from 'react';
-import { StyleSheet, View, Text } from 'react-native';
+import { StyleSheet, View, Text, ScrollView } from 'react-native';
 import COLORS from '../../theme/colors';
 import { IMAGES } from '../../assets/index';
 import { ResponsiveScreenLayout } from '../../components/Layout';
@@ -13,43 +13,56 @@ const HomeScreen = () => {
       amount="25,006.89"
       amountLabel="USD"
     >
-      <View style={styles.card}>
-        <Text style={styles.cardTitle}>Bienvenido a CoinLab</Text>
-        <Text style={styles.cardText}>
-          Tu plataforma de criptomonedas donde podrás monitorear precios,
-          gestionar tu portafolio y más.
-        </Text>
-      </View>
-      
-      <View style={styles.featuresContainer}>
-        <Text style={styles.sectionTitle}>Funcionalidades</Text>
-        
-        <View style={styles.featureCard}>
-          <Text style={styles.featureTitle}>Monitoreo de Precios</Text>
-          <Text style={styles.featureText}>
-            Sigue los precios de las principales criptomonedas en tiempo real.
+      <ScrollView
+        style={styles.scrollView}
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+      >
+        <View style={styles.card}>
+          <Text style={styles.cardTitle}>Bienvenido a CoinLab</Text>
+          <Text style={styles.cardText}>
+            Tu plataforma de criptomonedas donde podrás monitorear precios,
+            gestionar tu portafolio y más.
           </Text>
         </View>
         
-        <View style={styles.featureCard}>
-          <Text style={styles.featureTitle}>Portafolio</Text>
-          <Text style={styles.featureText}>
-            Gestiona tus inversiones en un solo lugar.
-          </Text>
+        <View style={styles.featuresContainer}>
+          <Text style={styles.sectionTitle}>Funcionalidades</Text>
+          
+          <View style={styles.featureCard}>
+            <Text style={styles.featureTitle}>Monitoreo de Precios</Text>
+            <Text style={styles.featureText}>
+              Sigue los precios de las principales criptomonedas en tiempo real.
+            </Text>
+          </View>
+          
+          <View style={styles.featureCard}>
+            <Text style={styles.featureTitle}>Portafolio</Text>
+            <Text style={styles.featureText}>
+              Gestiona tus inversiones en un solo lugar.
+            </Text>
+          </View>
+          
+          <View style={styles.featureCard}>
+            <Text style={styles.featureTitle}>Alertas</Text>
+            <Text style={styles.featureText}>
+              Configura alertas para precios específicos.
+            </Text>
+          </View>
         </View>
-        
-        <View style={styles.featureCard}>
-          <Text style={styles.featureTitle}>Alertas</Text>
-          <Text style={styles.featureText}>
-            Configura alertas para precios específicos.
-          </Text>
-        </View>
-      </View>
+      </ScrollView>
     </ResponsiveScreenLayout>
   );
 };
 
 const styles = StyleSheet.create({
+  scrollView: {
+    flex: 1,
+  },
+  scrollContent: {
+    paddingHorizontal: 15,
+    paddingBottom: 20,
+  },
   card: {
     backgroundColor: COLORS.lightGray,
     borderRadius: 10,

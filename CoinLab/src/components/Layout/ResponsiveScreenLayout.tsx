@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, StyleSheet, SafeAreaView, ScrollView, Dimensions, Platform, StatusBar } from 'react-native';
+import { View, StyleSheet, SafeAreaView, Dimensions, Platform, StatusBar } from 'react-native';
 import { HeaderCard } from '../Header';
 import { useHeader } from '../../context/HeaderContext';
 import COLORS from '../../theme/colors';
@@ -73,19 +73,17 @@ const ResponsiveScreenLayout: React.FC<ResponsiveScreenLayoutProps> = ({
       />
       
       {/* Vista con padding superior para reservar espacio para el header */}
-      <ScrollView 
-        style={styles.content} 
-        contentContainerStyle={[
-          styles.contentContainer, 
+      <View 
+        style={[
+          styles.content, 
           { 
             paddingTop: headerSpacing + STATUS_BAR_HEIGHT + SAFE_PADDING + headerOffset,
             paddingHorizontal: contentPadding,
           }
         ]}
-        showsVerticalScrollIndicator={false}
       >
         {children}
-      </ScrollView>
+      </View>
       
       {/* Header que se coloca encima usando position:absolute */}
       <View style={styles.headerContainer}>
@@ -121,9 +119,6 @@ const styles = StyleSheet.create({
   },
   content: {
     flex: 1,
-  },
-  contentContainer: {
-    paddingBottom: 20,
   },
 });
 

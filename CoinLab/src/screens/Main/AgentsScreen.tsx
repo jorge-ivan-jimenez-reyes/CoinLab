@@ -1,19 +1,8 @@
-import React, { useState, useRef } from 'react';
-import { StyleSheet, View, Text, SafeAreaView, FlatList, Dimensions, Animated, Platform } from 'react-native';
-import { StatusBar } from 'expo-status-bar';
+import React from 'react';
+import { StyleSheet, View, Text, FlatList } from 'react-native';
 import COLORS from '../../theme/colors';
-import { HeaderCard } from '../../components/Header';
 import { IMAGES } from '../../assets/index';
-
-// Obtener dimensiones para hacer el header responsivo
-const { height } = Dimensions.get('window');
-// Calcular la altura para los estados contraído y expandido
-const COLLAPSED_HEIGHT = Math.min(height * 0.09, 75);
-const EXPANDED_HEIGHT = Math.min(height * 0.20, 160);
-// Margen superior para evitar la barra de estado
-const STATUS_BAR_HEIGHT = Platform.OS === 'ios' ? 44 : 24;
-// Padding adicional para asegurar que los elementos no se corten
-const SAFE_PADDING = 5;
+import { ResponsiveScreenLayout } from '../../components/Layout';
 
 interface Agent {
   id: string;
@@ -30,27 +19,6 @@ const agentsData: Agent[] = [
 ];
 
 const AgentsScreen = () => {
-  // Estado para el espacio reservado para el header
-  const [headerSpacing, setHeaderSpacing] = useState(COLLAPSED_HEIGHT);
-  // Estado para seguir si el header está expandido
-  const [isHeaderExpanded, setIsHeaderExpanded] = useState(false);
-
-  // Manejar cambios de altura
-  const handleHeaderHeightChange = (height: number) => {
-    console.log(`Header height changed to: ${height}`);
-    setHeaderSpacing(height);
-  };
-
-  // Manejar cambios de estado expandido/contraído
-  const handleHeaderExpand = (expanded: boolean) => {
-    console.log(`Header expanded state: ${expanded}`);
-    setIsHeaderExpanded(expanded);
-    // También podemos actualizar el espacio inmediatamente para evitar retrasos
-    const newHeight = expanded ? EXPANDED_HEIGHT : COLLAPSED_HEIGHT;
-    console.log(`Setting header spacing to: ${newHeight}`);
-    setHeaderSpacing(newHeight);
-  };
-
   const renderAgentItem = ({ item }: { item: Agent }) => (
     <View style={styles.agentCard}>
       <Text style={styles.agentName}>{item.name}</Text>
@@ -62,54 +30,43 @@ const AgentsScreen = () => {
     </View>
   );
 
+  const ListHeaderComponent = () => (
+    <View style={styles.header}>
+      <Text style={styles.sectionTitle}>Agentes Disponibles</Text>
+      <Text style={styles.sectionDescription}>
+        Los agentes son algoritmos automatizados que te ayudan a gestionar tus inversiones.
+      </Text>
+    </View>
+  );
+
   return (
-    <SafeAreaView style={styles.container}>
-      <StatusBar style="light" translucent backgroundColor="transparent" />
-      
-      {/* Vista con padding superior para reservar espacio para el header */}
-      <View style={[styles.content, { paddingTop: headerSpacing + STATUS_BAR_HEIGHT + SAFE_PADDING }]}>
-        <Text style={styles.sectionTitle}>Agentes Disponibles</Text>
-        <Text style={styles.sectionDescription}>
-          Los agentes son algoritmos automatizados que te ayudan a gestionar tus inversiones.
-        </Text>
-        
-        <FlatList
-          data={agentsData}
-          renderItem={renderAgentItem}
-          keyExtractor={item => item.id}
-          contentContainerStyle={styles.listContainer}
-          showsVerticalScrollIndicator={false}
-        />
-      </View>
-      
-      {/* Header que se coloca encima usando position:absolute */}
-      <View style={styles.headerContainer}>
-        <HeaderCard 
-          title="Agentes" 
-          backgroundImage={IMAGES.CARD_BACKGROUND}
-          onHeightChange={handleHeaderHeightChange}
-          onExpand={handleHeaderExpand}
-        />
-      </View>
-    </SafeAreaView>
+    <ResponsiveScreenLayout
+      title="Agentes"
+      backgroundImage={IMAGES.CARD_BACKGROUND}
+      profit="Rendimiento Total"
+      amount="12,458.37"
+      amountLabel="USD"
+      contentPadding={0}
+    >
+      <FlatList
+        data={agentsData}
+        renderItem={renderAgentItem}
+        keyExtractor={item => item.id}
+        contentContainerStyle={styles.listContainer}
+        showsVerticalScrollIndicator={false}
+        ListHeaderComponent={<ListHeaderComponent />}
+      />
+    </ResponsiveScreenLayout>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: COLORS.background,
-  },
-  headerContainer: {
-    position: 'absolute',
-    top: STATUS_BAR_HEIGHT,
-    left: 0,
-    right: 0,
-    zIndex: 10,
-  },
-  content: {
-    flex: 1,
+  listContainer: {
     paddingHorizontal: 15,
+    paddingBottom: 20,
+  },
+  header: {
+    marginBottom: 10,
   },
   sectionTitle: {
     fontSize: 20,
@@ -122,9 +79,6 @@ const styles = StyleSheet.create({
     color: COLORS.text,
     marginBottom: 20,
     lineHeight: 22,
-  },
-  listContainer: {
-    paddingBottom: 20,
   },
   agentCard: {
     backgroundColor: COLORS.lightGray,

@@ -1,5 +1,5 @@
 import React from 'react';
-import { StyleSheet, View, Text, TouchableOpacity } from 'react-native';
+import { StyleSheet, View, Text, TouchableOpacity, ScrollView } from 'react-native';
 import { Ionicons } from 'react-native-vector-icons';
 import COLORS from '../../theme/colors';
 import { IMAGES } from '../../assets/index';
@@ -42,35 +42,48 @@ const HelpScreen = () => {
       title="Ayuda"
       backgroundImage={IMAGES.CARD_BACKGROUND}
     >
-      <Text style={styles.sectionTitle}>Preguntas Frecuentes</Text>
-      
-      <View style={styles.faqContainer}>
-        {faqData.map(renderFAQItem)}
-      </View>
-      
-      <Text style={styles.sectionTitle}>Contacto</Text>
-      
-      <View style={styles.contactContainer}>
-        <TouchableOpacity style={styles.contactItem}>
-          <Ionicons name="mail" size={24} color={COLORS.primary} />
-          <Text style={styles.contactText}>support@coinlab.com</Text>
-        </TouchableOpacity>
+      <ScrollView
+        style={styles.scrollView}
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+      >
+        <Text style={styles.sectionTitle}>Preguntas Frecuentes</Text>
         
-        <TouchableOpacity style={styles.contactItem}>
-          <Ionicons name="logo-twitter" size={24} color={COLORS.primary} />
-          <Text style={styles.contactText}>@CoinLabApp</Text>
-        </TouchableOpacity>
+        <View style={styles.faqContainer}>
+          {faqData.map(renderFAQItem)}
+        </View>
         
-        <TouchableOpacity style={styles.contactItem}>
-          <Ionicons name="call" size={24} color={COLORS.primary} />
-          <Text style={styles.contactText}>+1 (800) 555-1234</Text>
-        </TouchableOpacity>
-      </View>
+        <Text style={styles.sectionTitle}>Contacto</Text>
+        
+        <View style={styles.contactContainer}>
+          <TouchableOpacity style={styles.contactItem}>
+            <Ionicons name="mail" size={24} color={COLORS.primary} />
+            <Text style={styles.contactText}>support@coinlab.com</Text>
+          </TouchableOpacity>
+          
+          <TouchableOpacity style={styles.contactItem}>
+            <Ionicons name="logo-twitter" size={24} color={COLORS.primary} />
+            <Text style={styles.contactText}>@CoinLabApp</Text>
+          </TouchableOpacity>
+          
+          <TouchableOpacity style={styles.contactItem}>
+            <Ionicons name="call" size={24} color={COLORS.primary} />
+            <Text style={styles.contactText}>+1 (800) 555-1234</Text>
+          </TouchableOpacity>
+        </View>
+      </ScrollView>
     </ResponsiveScreenLayout>
   );
 };
 
 const styles = StyleSheet.create({
+  scrollView: {
+    flex: 1,
+  },
+  scrollContent: {
+    paddingHorizontal: 15,
+    paddingBottom: 20,
+  },
   sectionTitle: {
     fontSize: 20,
     fontWeight: 'bold',

@@ -1,20 +1,9 @@
-import React, { useState } from 'react';
-import { StyleSheet, View, Text, SafeAreaView, FlatList, Dimensions, Platform } from 'react-native';
-import { StatusBar } from 'expo-status-bar';
+import React from 'react';
+import { StyleSheet, View, Text, FlatList } from 'react-native';
 import { Ionicons } from 'react-native-vector-icons';
 import COLORS from '../../theme/colors';
-import { HeaderCard } from '../../components/Header';
 import { IMAGES } from '../../assets/index';
-
-// Obtener dimensiones para hacer el header responsivo
-const { height } = Dimensions.get('window');
-// Calcular la altura para los estados contraído y expandido
-const COLLAPSED_HEIGHT = Math.min(height * 0.09, 75);
-const EXPANDED_HEIGHT = Math.min(height * 0.20, 160);
-// Margen superior para evitar la barra de estado
-const STATUS_BAR_HEIGHT = Platform.OS === 'ios' ? 44 : 24;
-// Padding adicional para asegurar que los elementos no se corten
-const SAFE_PADDING = 5;
+import { ResponsiveScreenLayout } from '../../components/Layout';
 
 interface Transaction {
   id: string;
@@ -75,23 +64,6 @@ const transactionData: Transaction[] = [
 ];
 
 const HistoryScreen = () => {
-  // Estado para el espacio reservado para el header
-  const [headerSpacing, setHeaderSpacing] = useState(COLLAPSED_HEIGHT);
-  // Estado para seguir si el header está expandido
-  const [isHeaderExpanded, setIsHeaderExpanded] = useState(false);
-
-  // Manejar cambios de altura
-  const handleHeaderHeightChange = (height: number) => {
-    setHeaderSpacing(height);
-  };
-
-  // Manejar cambios de estado expandido/contraído
-  const handleHeaderExpand = (expanded: boolean) => {
-    setIsHeaderExpanded(expanded);
-    // También podemos actualizar el espacio inmediatamente para evitar retrasos
-    setHeaderSpacing(expanded ? EXPANDED_HEIGHT : COLLAPSED_HEIGHT);
-  };
-
   const getIconName = (type: Transaction['type']) => {
     switch (type) {
       case 'buy': return 'arrow-down-outline';
@@ -147,64 +119,48 @@ const HistoryScreen = () => {
     </View>
   );
 
-  return (
-    <SafeAreaView style={styles.container}>
-      <StatusBar style="light" translucent backgroundColor="transparent" />
-      
-      {/* Vista principal con padding superior para reservar espacio para el header */}
-      <View style={[styles.content, { paddingTop: headerSpacing + STATUS_BAR_HEIGHT + SAFE_PADDING }]}>
-        <View style={styles.filterContainer}>
-          <Text style={styles.filterTitle}>Filtros:</Text>
-          <View style={styles.filterPills}>
-            <View style={[styles.filterPill, styles.activePill]}>
-              <Text style={styles.activePillText}>Todos</Text>
-            </View>
-            <View style={styles.filterPill}>
-              <Text style={styles.pillText}>Compras</Text>
-            </View>
-            <View style={styles.filterPill}>
-              <Text style={styles.pillText}>Ventas</Text>
-            </View>
-          </View>
+  const ListHeaderComponent = () => (
+    <View style={styles.filterContainer}>
+      <Text style={styles.filterTitle}>Filtros:</Text>
+      <View style={styles.filterPills}>
+        <View style={[styles.filterPill, styles.activePill]}>
+          <Text style={styles.activePillText}>Todos</Text>
         </View>
-        
-        <FlatList
-          data={transactionData}
-          renderItem={renderTransactionItem}
-          keyExtractor={item => item.id}
-          contentContainerStyle={styles.listContainer}
-          showsVerticalScrollIndicator={false}
-        />
+        <View style={styles.filterPill}>
+          <Text style={styles.pillText}>Compras</Text>
+        </View>
+        <View style={styles.filterPill}>
+          <Text style={styles.pillText}>Ventas</Text>
+        </View>
       </View>
-      
-      {/* Header que se coloca encima usando position:absolute */}
-      <View style={styles.headerContainer}>
-        <HeaderCard 
-          title="Historial" 
-          backgroundImage={IMAGES.CARD_BACKGROUND}
-          onHeightChange={handleHeaderHeightChange}
-          onExpand={handleHeaderExpand}
-        />
-      </View>
-    </SafeAreaView>
+    </View>
+  );
+
+  return (
+    <ResponsiveScreenLayout
+      title="Historial"
+      backgroundImage={IMAGES.CARD_BACKGROUND}
+      profit="Total Transacciones"
+      amount="256"
+      amountLabel="USD"
+      contentPadding={0}
+    >
+      <FlatList
+        data={transactionData}
+        renderItem={renderTransactionItem}
+        keyExtractor={item => item.id}
+        contentContainerStyle={styles.listContainer}
+        showsVerticalScrollIndicator={false}
+        ListHeaderComponent={<ListHeaderComponent />}
+      />
+    </ResponsiveScreenLayout>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: COLORS.background,
-  },
-  headerContainer: {
-    position: 'absolute',
-    top: STATUS_BAR_HEIGHT, // Usar la constante para el margen superior
-    left: 0,
-    right: 0,
-    zIndex: 10,
-  },
-  content: {
-    flex: 1,
+  listContainer: {
     paddingHorizontal: 15,
+    paddingBottom: 20,
   },
   filterContainer: {
     marginBottom: 20,
@@ -236,9 +192,6 @@ const styles = StyleSheet.create({
     color: COLORS.white,
     fontWeight: '500',
   },
-  listContainer: {
-    paddingBottom: 20,
-  },
   transactionCard: {
     flexDirection: 'row',
     backgroundColor: COLORS.lightGray,
@@ -253,7 +206,7 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: COLORS.white,
+    backgroundColor: 'rgba(0,0,0,0.1)',
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 12,
@@ -264,7 +217,7 @@ const styles = StyleSheet.create({
   transactionHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginBottom: 6,
+    marginBottom: 4,
   },
   coinName: {
     fontSize: 16,
@@ -273,7 +226,6 @@ const styles = StyleSheet.create({
   },
   amount: {
     fontSize: 16,
-    fontWeight: '500',
     color: COLORS.text,
   },
   transactionFooter: {
@@ -290,13 +242,13 @@ const styles = StyleSheet.create({
   },
   price: {
     fontSize: 14,
-    color: COLORS.textLight,
     fontWeight: '500',
+    color: COLORS.text,
   },
   statusIndicator: {
-    width: 10,
-    height: 10,
-    borderRadius: 5,
+    width: 8,
+    height: 8,
+    borderRadius: 4,
     marginLeft: 10,
   },
 });
