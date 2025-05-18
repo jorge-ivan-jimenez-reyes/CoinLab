@@ -12,7 +12,7 @@ const EXPANDED_HEIGHT = height * 0.38 + (Platform.OS === 'ios' ? 44 : StatusBar.
 // Margen superior para evitar la barra de estado
 const STATUS_BAR_HEIGHT = Platform.OS === 'ios' ? 44 : StatusBar.currentHeight || 0;
 // Padding adicional para asegurar que los elementos no se corten
-const SAFE_PADDING = 5;
+const SAFE_PADDING = 0;
 
 interface ResponsiveScreenLayoutProps {
   children: React.ReactNode;
@@ -79,6 +79,7 @@ const ResponsiveScreenLayout: React.FC<ResponsiveScreenLayoutProps> = ({
           { 
             paddingTop: headerSpacing + STATUS_BAR_HEIGHT + SAFE_PADDING + headerOffset,
             paddingHorizontal: contentPadding,
+            paddingBottom: 0,
           }
         ]}
       >

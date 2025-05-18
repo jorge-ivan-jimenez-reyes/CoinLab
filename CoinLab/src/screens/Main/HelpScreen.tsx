@@ -47,29 +47,31 @@ const HelpScreen = () => {
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
-        <Text style={styles.sectionTitle}>Preguntas Frecuentes</Text>
-        
-        <View style={styles.faqContainer}>
-          {faqData.map(renderFAQItem)}
-        </View>
-        
-        <Text style={styles.sectionTitle}>Contacto</Text>
-        
-        <View style={styles.contactContainer}>
-          <TouchableOpacity style={styles.contactItem}>
-            <Ionicons name="mail" size={24} color={COLORS.primary} />
-            <Text style={styles.contactText}>support@coinlab.com</Text>
-          </TouchableOpacity>
+        <View style={styles.contentContainer}>
+          <Text style={styles.sectionTitle}>Preguntas Frecuentes</Text>
           
-          <TouchableOpacity style={styles.contactItem}>
-            <Ionicons name="logo-twitter" size={24} color={COLORS.primary} />
-            <Text style={styles.contactText}>@CoinLabApp</Text>
-          </TouchableOpacity>
+          <View style={styles.faqContainer}>
+            {faqData.map(renderFAQItem)}
+          </View>
           
-          <TouchableOpacity style={styles.contactItem}>
-            <Ionicons name="call" size={24} color={COLORS.primary} />
-            <Text style={styles.contactText}>+1 (800) 555-1234</Text>
-          </TouchableOpacity>
+          <Text style={styles.sectionTitle}>Contacto</Text>
+          
+          <View style={styles.contactContainer}>
+            <TouchableOpacity style={styles.contactItem}>
+              <Ionicons name="mail" size={24} color={COLORS.primary} />
+              <Text style={styles.contactText}>support@coinlab.com</Text>
+            </TouchableOpacity>
+            
+            <TouchableOpacity style={styles.contactItem}>
+              <Ionicons name="logo-twitter" size={24} color={COLORS.primary} />
+              <Text style={styles.contactText}>@CoinLabApp</Text>
+            </TouchableOpacity>
+            
+            <TouchableOpacity style={styles.contactItem}>
+              <Ionicons name="call" size={24} color={COLORS.primary} />
+              <Text style={styles.contactText}>+1 (800) 555-1234</Text>
+            </TouchableOpacity>
+          </View>
         </View>
       </ScrollView>
     </ResponsiveScreenLayout>
@@ -79,10 +81,14 @@ const HelpScreen = () => {
 const styles = StyleSheet.create({
   scrollView: {
     flex: 1,
+    width: '100%',
   },
   scrollContent: {
+    paddingBottom: 60,
+  },
+  contentContainer: {
     paddingHorizontal: 15,
-    paddingBottom: 20,
+    width: '100%',
   },
   sectionTitle: {
     fontSize: 20,
@@ -90,9 +96,11 @@ const styles = StyleSheet.create({
     color: COLORS.text,
     marginBottom: 15,
     marginTop: 10,
+    width: '100%',
   },
   faqContainer: {
     marginBottom: 20,
+    width: '100%',
   },
   faqItem: {
     backgroundColor: COLORS.lightGray,
@@ -101,6 +109,7 @@ const styles = StyleSheet.create({
     marginBottom: 15,
     borderWidth: 1,
     borderColor: COLORS.mediumGray,
+    width: '100%',
   },
   question: {
     fontSize: 18,
@@ -120,6 +129,7 @@ const styles = StyleSheet.create({
     marginBottom: 20,
     borderWidth: 1,
     borderColor: COLORS.mediumGray,
+    width: '100%',
   },
   contactItem: {
     flexDirection: 'row',

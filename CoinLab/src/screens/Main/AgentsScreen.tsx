@@ -49,6 +49,7 @@ const AgentsScreen = () => {
       contentPadding={0}
     >
       <FlatList
+        style={styles.flatList}
         data={agentsData}
         renderItem={renderAgentItem}
         keyExtractor={item => item.id}
@@ -61,12 +62,18 @@ const AgentsScreen = () => {
 };
 
 const styles = StyleSheet.create({
+  flatList: {
+    flex: 1,
+    width: '100%',
+  },
   listContainer: {
     paddingHorizontal: 15,
-    paddingBottom: 20,
+    paddingBottom: 60,
+    width: '100%',
   },
   header: {
     marginBottom: 10,
+    width: '100%',
   },
   sectionTitle: {
     fontSize: 20,
@@ -87,6 +94,7 @@ const styles = StyleSheet.create({
     marginBottom: 15,
     borderWidth: 1,
     borderColor: COLORS.mediumGray,
+    width: '100%',
   },
   agentName: {
     fontSize: 18,

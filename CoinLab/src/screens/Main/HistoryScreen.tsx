@@ -146,6 +146,7 @@ const HistoryScreen = () => {
       contentPadding={0}
     >
       <FlatList
+        style={styles.flatList}
         data={transactionData}
         renderItem={renderTransactionItem}
         keyExtractor={item => item.id}
@@ -158,12 +159,18 @@ const HistoryScreen = () => {
 };
 
 const styles = StyleSheet.create({
+  flatList: {
+    flex: 1,
+    width: '100%',
+  },
   listContainer: {
     paddingHorizontal: 15,
-    paddingBottom: 20,
+    paddingBottom: 60,
+    width: '100%',
   },
   filterContainer: {
     marginBottom: 20,
+    width: '100%',
   },
   filterTitle: {
     fontSize: 16,
@@ -201,6 +208,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: COLORS.mediumGray,
     alignItems: 'center',
+    width: '100%',
   },
   iconContainer: {
     width: 40,
