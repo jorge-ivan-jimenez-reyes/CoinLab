@@ -16,8 +16,8 @@ const IS_IOS = Platform.OS === 'ios';
 const NOTCH_SPACE = IS_IOS ? 44 : StatusBar.currentHeight || 0; 
 
 // Ajustar alturas basadas en el tamaño de la pantalla
-const COLLAPSED_HEIGHT = Math.min(height * 0.15, 120) + NOTCH_SPACE; 
-const EXPANDED_HEIGHT = Math.min(height * 0.21, 160) + NOTCH_SPACE; 
+const COLLAPSED_HEIGHT = Math.min(height * 0.10, 80) + NOTCH_SPACE; // Altura reducida cuando está contraído
+const EXPANDED_HEIGHT = Math.min(height * 0.25, 190) + NOTCH_SPACE; // Altura aumentada cuando está expandido
 const DRAG_THRESHOLD = 25; 
 
 // Configuración de animación para una experiencia fluida
@@ -65,6 +65,9 @@ const HeaderCard: React.FC<HeaderCardProps> = ({
   
   // Valor para seguir el arrastre manual
   const dragY = useRef(new Animated.Value(0)).current;
+  
+  // Opacidad animada para la información financiera
+  const infoOpacity = useRef(new Animated.Value(0)).current;
   
   // Notificar altura actual al padre - evitar notificaciones innecesarias
   const notifyHeightChange = (height: number) => {
@@ -140,6 +143,7 @@ const HeaderCard: React.FC<HeaderCardProps> = ({
 
     heightAnim.setValue(COLLAPSED_HEIGHT);
     lastNotifiedHeight.current = COLLAPSED_HEIGHT;
+    infoOpacity.setValue(0); // Comenzar oculto
     
     // Notificar altura inicial
     notifyHeightChange(COLLAPSED_HEIGHT);
@@ -147,8 +151,8 @@ const HeaderCard: React.FC<HeaderCardProps> = ({
     // Actualizar alturas si cambian las dimensiones
     const handleDimensionsChange = () => {
       const { height: newHeight } = Dimensions.get('window');
-      const newCollapsed = Math.min(newHeight * 0.15, 120) + NOTCH_SPACE;
-      const newExpanded = Math.min(newHeight * 0.21, 160) + NOTCH_SPACE;
+      const newCollapsed = Math.min(newHeight * 0.10, 80) + NOTCH_SPACE;
+      const newExpanded = Math.min(newHeight * 0.25, 190) + NOTCH_SPACE;
       
       const targetHeight = expanded ? newExpanded : newCollapsed;
       heightAnim.setValue(targetHeight);
@@ -180,12 +184,20 @@ const HeaderCard: React.FC<HeaderCardProps> = ({
     const targetHeight = expanded ? EXPANDED_HEIGHT : COLLAPSED_HEIGHT;
     notifyHeightChange(targetHeight);
     
+    // Animar la altura
     Animated.spring(heightAnim, {
       toValue: targetHeight,
       ...SPRING_CONFIG
     }).start(() => {
       isAnimating.current = false;
     });
+    
+    // Animar la opacidad de la información
+    Animated.timing(infoOpacity, {
+      toValue: expanded ? 1 : 0,
+      duration: 200,
+      useNativeDriver: false
+    }).start();
   }, [expanded]);
 
   const resetToCurrentState = () => {
@@ -276,8 +288,16 @@ const HeaderCard: React.FC<HeaderCardProps> = ({
                 </View>
               </View>
               
-              {/* Información financiera */}
-              <View style={styles.financialInfoContainer}>
+              {/* Información financiera - se muestra solo cuando está expandido */}
+              <Animated.View 
+                style={[
+                  styles.financialInfoContainer,
+                  { opacity: infoOpacity, height: infoOpacity.interpolate({
+                    inputRange: [0, 1],
+                    outputRange: [0, 100]
+                  }) }
+                ]}
+              >
                 <Text style={styles.titleText}>{title}</Text>
                 
                 <View style={styles.amountContainer}>
@@ -286,7 +306,7 @@ const HeaderCard: React.FC<HeaderCardProps> = ({
                 </View>
                 
                 <Text style={styles.profitLabel}>{profit}</Text>
-              </View>
+              </Animated.View>
             </View>
           </View>
         </AnimatedImageBackground>
@@ -323,8 +343,16 @@ const HeaderCard: React.FC<HeaderCardProps> = ({
                 </View>
               </View>
               
-              {/* Información financiera */}
-              <View style={styles.financialInfoContainer}>
+              {/* Información financiera - se muestra solo cuando está expandido */}
+              <Animated.View 
+                style={[
+                  styles.financialInfoContainer,
+                  { opacity: infoOpacity, height: infoOpacity.interpolate({
+                    inputRange: [0, 1],
+                    outputRange: [0, 100]
+                  }) }
+                ]}
+              >
                 <Text style={styles.titleText}>{title}</Text>
                 
                 <View style={styles.amountContainer}>
@@ -333,7 +361,7 @@ const HeaderCard: React.FC<HeaderCardProps> = ({
                 </View>
                 
                 <Text style={styles.profitLabel}>{profit}</Text>
-              </View>
+              </Animated.View>
             </View>
           </View>
         </AnimatedLinearGradient>
@@ -423,7 +451,7 @@ const styles = StyleSheet.create({
     width: 70,
     height: 4,
     borderRadius: 4,
-    backgroundColor: 'rgba(0, 0, 0, 0.3)',
+    backgroundColor: 'rgba(255, 255, 255, 0.3)',
     zIndex: 101,
   },
   expandTouchArea: {
@@ -441,12 +469,13 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     marginTop: 6,
     marginBottom: 12,
+    overflow: 'hidden',
   },
   titleText: {
     color: COLORS.white,
-    fontSize: 14,
+    fontSize: 16,
     opacity: 0.8,
-    marginBottom: 6,
+    marginBottom: 8,
   },
   amountContainer: {
     flexDirection: 'row',
@@ -456,20 +485,21 @@ const styles = StyleSheet.create({
   },
   amountText: {
     color: COLORS.white,
-    fontSize: 32,
+    fontSize: 36, // Tamaño aumentado
     fontWeight: 'bold',
   },
   currencyText: {
     color: COLORS.white,
-    fontSize: 16,
+    fontSize: 18, // Tamaño aumentado
     opacity: 0.9,
     alignSelf: 'flex-end',
     marginBottom: 5,
   },
   profitLabel: {
     color: COLORS.white,
-    fontSize: 14,
+    fontSize: 16, // Tamaño aumentado
     opacity: 0.8,
+    marginTop: 4,
   },
 });
 
