@@ -14,6 +14,9 @@ const STATUS_BAR_HEIGHT = Platform.OS === 'ios' ? 44 : StatusBar.currentHeight |
 // Padding adicional para asegurar que los elementos no se corten
 const SAFE_PADDING = 15;
 
+// Imagen de fondo por defecto
+const DEFAULT_BACKGROUND_IMAGE = require('../../assets/card.png');
+
 interface ResponsiveScreenLayoutProps {
   children: React.ReactNode;
   title?: string;
@@ -35,7 +38,7 @@ const ResponsiveScreenLayout: React.FC<ResponsiveScreenLayoutProps> = ({
   title = '',
   showBackButton = true,
   onBackPress,
-  backgroundImage,
+  backgroundImage = DEFAULT_BACKGROUND_IMAGE,
   amount,
   amountLabel,
   profit,
@@ -78,7 +81,7 @@ const ResponsiveScreenLayout: React.FC<ResponsiveScreenLayoutProps> = ({
           title={title}
           showBackButton={showBackButton}
           onBackPress={onBackPress}
-          backgroundImage={backgroundImage || require('../../assets/card.png')}
+          backgroundImage={require('../../assets/card.png')}
           amount={amount}
           amountLabel={amountLabel}
           profit={profit}

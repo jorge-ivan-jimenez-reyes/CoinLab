@@ -15,11 +15,11 @@ const BACKGROUND_COLOR = '#171717';
 
 // Manejo del espacio superior para distintas plataformas
 const IS_IOS = Platform.OS === 'ios';
-const NOTCH_SPACE = IS_IOS ? 44 : StatusBar.currentHeight || 0; 
+const NOTCH_SPACE = IS_IOS ? 50 : StatusBar.currentHeight || 0; // Aumentar para evitar el notch
 
 // Ajustar alturas basadas en el tamaño de la pantalla - Más compactas
-const COLLAPSED_HEIGHT = Math.min(height * 0.08, 70) + NOTCH_SPACE; // Más pequeño cuando contraído
-const EXPANDED_HEIGHT = height * 0.38 + NOTCH_SPACE; // Más responsivo al tamaño de la pantalla
+const COLLAPSED_HEIGHT = Math.min(height * 0.12, 105) + NOTCH_SPACE; // Aumentar altura cuando contraído
+const EXPANDED_HEIGHT = height * 0.39 + NOTCH_SPACE; // Aumentar un poco para el modo expandido
 const DRAG_THRESHOLD = 20; 
 
 // Valor fijo para el border radius
@@ -36,6 +36,9 @@ const TIMING_CONFIG = {
   duration: 200,
   useNativeDriver: false // Desactivar native driver para todas las animaciones
 };
+
+// Importar la imagen de fondo por defecto
+const DEFAULT_BACKGROUND_IMAGE = require('../../assets/card.png');
 
 interface HeaderCardProps {
   title?: string;
@@ -56,7 +59,7 @@ const HeaderCard: React.FC<HeaderCardProps> = ({
   title = 'Historial',
   showBackButton = true,
   onBackPress,
-  backgroundImage,
+  backgroundImage = DEFAULT_BACKGROUND_IMAGE,
   onHeightChange,
   onExpand,
   amount = '25,006.89',
@@ -200,7 +203,7 @@ const HeaderCard: React.FC<HeaderCardProps> = ({
     // Usar Animated.timing para una respuesta más precisa y predecible
     Animated.timing(heightAnim, {
       toValue: targetHeight,
-      duration: 250, // Duración fija para previsibilidad
+      duration: 300, // Duración un poco mayor para una transición más suave
       easing: Easing.bezier(0.25, 0.1, 0.25, 1), // Curva de aceleración suave
       useNativeDriver: false
     }).start(() => {
@@ -214,7 +217,7 @@ const HeaderCard: React.FC<HeaderCardProps> = ({
     // Animar la opacidad de la información de forma independiente - más rápida
     Animated.timing(infoOpacity, {
       toValue: expanded ? 1 : 0,
-      duration: 120, // Más rápido para una respuesta inmediata
+      duration: 200, // Aumentar la duración para una transición más suave
       easing: Easing.linear, // Lineal para cambio de opacidad
       useNativeDriver: false
     }).start();
@@ -250,6 +253,12 @@ const HeaderCard: React.FC<HeaderCardProps> = ({
   // Componentes Animados
   const AnimatedImageBackground = Animated.createAnimatedComponent(ImageBackground);
   const AnimatedLinearGradient = Animated.createAnimatedComponent(LinearGradient);
+
+  // Debug para ver si la imagen se está cargando correctamente
+  useEffect(() => {
+    console.log("Background Image Source:", backgroundImage);
+    console.log("Background Image Type:", typeof backgroundImage);
+  }, [backgroundImage]);
 
   // Función para cambiar el estado usando el contexto global
   const toggleExpanded = (newExpanded = !expanded) => {
@@ -301,140 +310,61 @@ const HeaderCard: React.FC<HeaderCardProps> = ({
           toggleExpanded();
         }}
       >
-        {backgroundImage ? (
-          <AnimatedImageBackground
-            source={backgroundImage}
-            style={[
-              styles.cardContainer, 
-              { 
-                height: dynamicHeight,
-                borderBottomLeftRadius: BORDER_RADIUS,
-                borderBottomRightRadius: BORDER_RADIUS,
-                borderBottomWidth: 0,
-                borderWidth: 0
-              }
-            ]}
-            imageStyle={[
-              styles.backgroundImage,
-              {
-                borderBottomLeftRadius: BORDER_RADIUS,
-                borderBottomRightRadius: BORDER_RADIUS,
-                borderBottomWidth: 0
-              }
-            ]}
-            resizeMode="cover"
-          >
-            <View style={styles.contentWrapper}>
-              <View style={styles.innerContent}>
-                <View style={[
-                  styles.topSection,
-                  expanded ? styles.expandedTopSection : styles.collapsedTopSection
-                ]}>
-                  <View style={styles.leftSection}>
-                    {showBackButton && (
-                      <TouchableOpacity style={styles.navButton} onPress={handleBackPress}>
-                        <Ionicons name="chevron-back" size={22} color={COLORS.white} />
-                      </TouchableOpacity>
-                    )}
-                    
-                    <TouchableOpacity style={styles.navButton}>
-                      <Ionicons name="card-outline" size={22} color={COLORS.white} />
+        <AnimatedImageBackground
+          source={DEFAULT_BACKGROUND_IMAGE}
+          style={[styles.cardContainer, { height: dynamicHeight }]}
+          imageStyle={styles.backgroundImage}
+          resizeMode="cover"
+        >
+          {/* Semi-transparent overlay for better text readability */}
+          <View style={styles.overlay} />
+          <View style={styles.contentWrapper}>
+            <View style={styles.innerContent}>
+              <View style={[
+                styles.topSection,
+                expanded ? styles.expandedTopSection : styles.collapsedTopSection
+              ]}>
+                <View style={styles.leftSection}>
+                  {showBackButton && (
+                    <TouchableOpacity style={styles.navButton} onPress={handleBackPress}>
+                      <Ionicons name="chevron-back" size={24} color={COLORS.white} />
                     </TouchableOpacity>
-                    
-                    <TouchableOpacity style={styles.navButton}>
-                      <Ionicons name="eye-outline" size={22} color={COLORS.white} />
-                    </TouchableOpacity>
-                  </View>
+                  )}
                   
-                  <View style={styles.rightSection}>
-                    <TouchableOpacity style={styles.profileButton} onPress={handleProfilePress}>
-                      <Ionicons name="person-circle-outline" size={26} color={COLORS.white} />
-                    </TouchableOpacity>
-                  </View>
+                  <TouchableOpacity style={styles.navButton}>
+                    <Ionicons name="card-outline" size={24} color={COLORS.white} />
+                  </TouchableOpacity>
+                  
+                  <TouchableOpacity style={styles.navButton}>
+                    <Ionicons name="eye-outline" size={24} color={COLORS.white} />
+                  </TouchableOpacity>
                 </View>
                 
-                <Animated.View 
-                  style={[
-                    styles.financialInfoContainer,
-                    expanded ? styles.expandedFinancialContainer : styles.collapsedFinancialContainer
-                  ]}
-                >
-                  <Text style={styles.profitLabel}>{profit}</Text>
-                  
-                  <View style={styles.amountContainer}>
-                    <Text style={styles.amountText}>{amount}</Text>
-                    <Text style={styles.currencyText}> {amountLabel}</Text>
-                  </View>
-                  
-                  <Text style={styles.titleText}>{title}</Text>
-                </Animated.View>
+                <View style={styles.rightSection}>
+                  <TouchableOpacity style={styles.profileButton} onPress={handleProfilePress}>
+                    <Ionicons name="person-circle-outline" size={28} color={COLORS.white} />
+                  </TouchableOpacity>
+                </View>
               </View>
-            </View>
-          </AnimatedImageBackground>
-        ) : (
-          <AnimatedLinearGradient
-            colors={GRADIENT_COLORS}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 0, y: 1 }}
-            style={[
-              styles.cardContainer, 
-              { 
-                height: dynamicHeight,
-                borderBottomLeftRadius: BORDER_RADIUS,
-                borderBottomRightRadius: BORDER_RADIUS,
-                borderBottomWidth: 0,
-                borderWidth: 0
-              }
-            ]}
-          >
-            <View style={styles.contentWrapper}>
-              <View style={styles.innerContent}>
-                <View style={[
-                  styles.topSection,
-                  expanded ? styles.expandedTopSection : styles.collapsedTopSection
-                ]}>
-                  <View style={styles.leftSection}>
-                    {showBackButton && (
-                      <TouchableOpacity style={styles.navButton} onPress={handleBackPress}>
-                        <Ionicons name="chevron-back" size={22} color={COLORS.white} />
-                      </TouchableOpacity>
-                    )}
-                    
-                    <TouchableOpacity style={styles.navButton}>
-                      <Ionicons name="card-outline" size={22} color={COLORS.white} />
-                    </TouchableOpacity>
-                    
-                    <TouchableOpacity style={styles.navButton}>
-                      <Ionicons name="eye-outline" size={22} color={COLORS.white} />
-                    </TouchableOpacity>
-                  </View>
-                  
-                  <View style={styles.rightSection}>
-                    <TouchableOpacity style={styles.profileButton} onPress={handleProfilePress}>
-                      <Ionicons name="person-circle-outline" size={26} color={COLORS.white} />
-                    </TouchableOpacity>
-                  </View>
+              
+              <Animated.View 
+                style={[
+                  styles.financialInfoContainer,
+                  expanded ? styles.expandedFinancialContainer : styles.collapsedFinancialContainer
+                ]}
+              >
+                <Text style={styles.profitLabel}>{profit}</Text>
+                
+                <View style={styles.amountContainer}>
+                  <Text style={styles.amountText}>{amount}</Text>
+                  <Text style={styles.currencyText}> {amountLabel}</Text>
                 </View>
                 
-                <Animated.View 
-                  style={[
-                    styles.financialInfoContainer,
-                    expanded ? styles.expandedFinancialContainer : styles.collapsedFinancialContainer
-                  ]}
-                >
-                  <Text style={styles.profitLabel}>{profit}</Text>
-                  
-                  <View style={styles.amountContainer}>
-                    <Text style={styles.amountText}>{amount}</Text>
-                    <Text style={styles.currencyText}> {amountLabel}</Text>
-                  </View>
-                  
-                  <Text style={styles.titleText}>{title}</Text>
-                </Animated.View>
-              </View>
+                <Text style={styles.titleText}>{title}</Text>
+              </Animated.View>
             </View>
-          </AnimatedLinearGradient>
-        )}
+          </View>
+        </AnimatedImageBackground>
       </TouchableOpacity>
     </Animated.View>
   );
@@ -451,7 +381,7 @@ const styles = StyleSheet.create({
     right: 0,
     marginTop: 0,
     marginBottom: 0,
-    backgroundColor: BACKGROUND_COLOR,
+    backgroundColor: 'transparent',
     shadowColor: 'transparent',
     shadowOffset: { width: 0, height: 0 },
     shadowRadius: 0,
@@ -462,44 +392,50 @@ const styles = StyleSheet.create({
   contentWrapper: {
     flex: 1,
     width: '100%',
-    paddingTop: NOTCH_SPACE + 2,
-    backgroundColor: BACKGROUND_COLOR,
+    paddingTop: NOTCH_SPACE + 10, // Aumentar para dar más espacio superior
+    backgroundColor: 'transparent',
   },
   innerContent: {
     flex: 1,
     padding: 16,
     paddingTop: IS_IOS ? 12 : 10,
     paddingBottom: 0,
-    backgroundColor: BACKGROUND_COLOR,
+    backgroundColor: 'transparent',
   },
   topSection: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    backgroundColor: BACKGROUND_COLOR,
+    backgroundColor: 'transparent',
+    paddingTop: IS_IOS ? 30 : 20,
+    paddingHorizontal: 8,
   },
   expandedTopSection: {
     marginBottom: 16,
-    minHeight: 40,
+    minHeight: 44,
+    paddingTop: IS_IOS ? 30 : 30,
   },
   collapsedTopSection: {
     marginBottom: 0,
-    minHeight: 32,
+    minHeight: 44,
+    paddingTop: IS_IOS ? 30 : 30,
   },
   leftSection: {
     flexDirection: 'row',
     alignItems: 'center',
     flex: 1,
-    gap: 15,
+    gap: 18,
+    paddingLeft: 8,
   },
   rightSection: {
     alignItems: 'flex-end',
+    paddingRight: 8,
   },
   navButton: {
-    padding: 8,
+    padding: 10,
   },
   profileButton: {
-    padding: 8,
+    padding: 10,
   },
   fullTouchContainer: {
     flex: 1,
@@ -525,22 +461,30 @@ const styles = StyleSheet.create({
   financialInfoContainer: {
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: BACKGROUND_COLOR,
+    backgroundColor: 'transparent',
     height: 'auto',
   },
   cardContainer: {
     width: '100%',
-    backgroundColor: BACKGROUND_COLOR,
+    height: '100%',
+    backgroundColor: 'transparent',
     borderRadius: 0,
     borderTopLeftRadius: 0,
     borderTopRightRadius: 0,
+    borderBottomLeftRadius: BORDER_RADIUS,
+    borderBottomRightRadius: BORDER_RADIUS,
     overflow: 'hidden',
-    paddingBottom: 0,
+    borderBottomWidth: 0,
+    borderWidth: 0,
   },
   backgroundImage: {
     width: '100%',
     height: '100%',
-    backgroundColor: BACKGROUND_COLOR,
+    borderBottomLeftRadius: BORDER_RADIUS,
+    borderBottomRightRadius: BORDER_RADIUS,
+    position: 'absolute',
+    top: 30,
+    right: 80,
   },
   amountContainer: {
     flexDirection: 'row',
@@ -595,6 +539,14 @@ const styles = StyleSheet.create({
     marginBottom: 0,
     transform: [{scale: 1}],
     paddingBottom: 0,
+  },
+  overlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(0, 0, 0, 0.4)',
   },
   });
   
