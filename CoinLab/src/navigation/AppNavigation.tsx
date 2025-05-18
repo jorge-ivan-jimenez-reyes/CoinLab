@@ -1,27 +1,29 @@
 import React from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
-
-// Navigators
-import AuthNavigation from './AuthNavigation';
 import MainNavigation from './MainNavigation';
+import AuthNavigation from './AuthNavigation';
+import AgentDetailScreen from '../screens/Main/AgentDetailScreen';
 
-// Context
-import { useAuth } from '../context/AuthContext';
+// Define stack navigator params
+export type RootStackParamList = {
+  Main: undefined;
+  Auth: undefined;
+  AgentDetail: { agentId: string };
+};
 
-const Stack = createStackNavigator();
+const Stack = createStackNavigator<RootStackParamList>();
 
 const AppNavigation = () => {
-  const { isAuthenticated } = useAuth();
-
   return (
     <NavigationContainer>
-      <Stack.Navigator screenOptions={{ headerShown: false }}>
-        {!isAuthenticated ? (
-          <Stack.Screen name="Auth" component={AuthNavigation} />
-        ) : (
-          <Stack.Screen name="Main" component={MainNavigation} />
-        )}
+      <Stack.Navigator 
+        initialRouteName="Main"
+        screenOptions={{ headerShown: false }}
+      >
+        <Stack.Screen name="Main" component={MainNavigation} />
+        <Stack.Screen name="Auth" component={AuthNavigation} />
+        <Stack.Screen name="AgentDetail" component={AgentDetailScreen} />
       </Stack.Navigator>
     </NavigationContainer>
   );

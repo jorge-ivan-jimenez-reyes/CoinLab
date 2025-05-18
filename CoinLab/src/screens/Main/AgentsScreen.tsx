@@ -1,16 +1,29 @@
 import React from 'react';
 import { StyleSheet, View, Text, FlatList, TouchableOpacity, Image } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
+import { StackNavigationProp } from '@react-navigation/stack';
 import COLORS from '../../theme/colors';
 import { IMAGES } from '../../assets/index';
 import { ResponsiveScreenLayout } from '../../components/Layout';
 import { Ionicons } from 'react-native-vector-icons';
 import { useData, Agent } from '../../context/DataContext';
+import { RootStackParamList } from '../../navigation/AppNavigation';
+
+type AgentsScreenNavigationProp = StackNavigationProp<RootStackParamList, 'Main'>;
 
 const AgentsScreen = () => {
   const { agents, agentPortfolio, addAgent } = useData();
+  const navigation = useNavigation<AgentsScreenNavigationProp>();
+
+  const handleAgentPress = (agentId: string) => {
+    navigation.navigate('AgentDetail', { agentId });
+  };
 
   const renderAgentItem = ({ item }: { item: Agent }) => (
-    <View style={styles.agentCard}>
+    <TouchableOpacity 
+      style={styles.agentCard}
+      onPress={() => handleAgentPress(item.id)}
+    >
       <View style={styles.leftContent}>
         <Image source={IMAGES.USER_ICON} style={styles.agentIcon} />
         <View style={styles.agentInfo}>
@@ -26,7 +39,7 @@ const AgentsScreen = () => {
            'Doge'}
         </Text>
       </View>
-    </View>
+    </TouchableOpacity>
   );
 
   const handleAddAgent = () => {

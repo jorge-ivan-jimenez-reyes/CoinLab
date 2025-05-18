@@ -1,163 +1,268 @@
-import React from 'react';
-import { StyleSheet, View, Text, TouchableOpacity, ScrollView } from 'react-native';
+import React, { useState } from 'react';
+import { 
+  View, 
+  Text, 
+  StyleSheet, 
+  TouchableOpacity, 
+  ScrollView, 
+  SafeAreaView,
+  StatusBar
+} from 'react-native';
 import { Ionicons } from 'react-native-vector-icons';
+import { useNavigation } from '@react-navigation/native';
 import COLORS from '../../theme/colors';
-import { IMAGES } from '../../assets/index';
-import { ResponsiveScreenLayout } from '../../components/Layout';
+import HeaderCard from '../../components/Header/HeaderCard';
+import { IMAGES } from '../../assets';
 
-interface FAQItem {
-  question: string;
-  answer: string;
+// Sample user data - in a real app, this would come from a context or props
+const userData = {
+  name: 'Jose Manuel',
+};
+
+interface AccordionItemProps {
+  title: string;
+  children: React.ReactNode;
+  isOpen: boolean;
+  toggleOpen: () => void;
 }
 
-const faqData: FAQItem[] = [
-  {
-    question: '¿Qué es CoinLab?',
-    answer: 'CoinLab es una aplicación para monitorear, analizar y gestionar inversiones en criptomonedas. Ofrece herramientas para seguimiento de precios, gestión de portafolio y análisis de mercado.'
-  },
-  {
-    question: '¿Cómo crear una cuenta?',
-    answer: 'Para crear una cuenta, ve a la pantalla de inicio y selecciona "Registrarse". Completa el formulario con tu información personal y sigue las instrucciones para verificar tu correo electrónico.'
-  },
-  {
-    question: '¿Es segura mi información?',
-    answer: 'Sí, CoinLab utiliza encriptación de nivel bancario para proteger tus datos personales y financieros. No almacenamos tus claves privadas y utilizamos autenticación de dos factores para mayor seguridad.'
-  },
-  {
-    question: '¿Cómo contactar al soporte?',
-    answer: 'Puedes contactar a nuestro equipo de soporte a través del formulario en la aplicación, por correo electrónico a support@coinlab.com o mediante nuestras redes sociales.'
-  }
-];
-
-const HelpScreen = () => {
-  const renderFAQItem = (item: FAQItem, index: number) => (
-    <View key={index} style={styles.faqItem}>
-      <Text style={styles.question}>{item.question}</Text>
-      <Text style={styles.answer}>{item.answer}</Text>
+const AccordionItem: React.FC<AccordionItemProps> = ({ 
+  title, 
+  children, 
+  isOpen, 
+  toggleOpen 
+}) => {
+  return (
+    <View style={styles.accordionContainer}>
+      <TouchableOpacity 
+        style={styles.accordionHeader} 
+        onPress={toggleOpen}
+        activeOpacity={0.7}
+      >
+        <Text style={styles.accordionTitle}>{title}</Text>
+        <Ionicons 
+          name={isOpen ? 'remove' : 'add'} 
+          size={24} 
+          color={COLORS.text} 
+        />
+      </TouchableOpacity>
+      
+      {isOpen && (
+        <View style={styles.accordionContent}>
+          {children}
+        </View>
+      )}
     </View>
   );
+};
+
+const HelpScreen: React.FC = () => {
+  const navigation = useNavigation();
+  const [openSections, setOpenSections] = useState<{[key: string]: boolean}>({
+    agents: true,
+    banking: false,
+    security: false,
+  });
+
+  const toggleSection = (section: string) => {
+    setOpenSections(prev => ({
+      ...prev,
+      [section]: !prev[section]
+    }));
+  };
+
+  const handleNavigation = (screenName: string, params: any) => {
+    // Navigation would be implemented here in a real app
+    console.log(`Navigate to ${screenName} with params:`, params);
+  };
 
   return (
-    <ResponsiveScreenLayout
-      title="Ayuda"
-      backgroundImage={IMAGES.CARD_BACKGROUND}
-    >
-      <ScrollView
-        style={styles.scrollView}
-        contentContainerStyle={styles.scrollContent}
-        showsVerticalScrollIndicator={false}
+    <SafeAreaView style={styles.container}>
+      <StatusBar barStyle="light-content" backgroundColor="#171717" />
+      
+      <HeaderCard 
+        title="Como te podemos ayudar hoy?"
+        amount={userData.name}
+        amountLabel=""
+        profit=""
+        showBackButton={true}
+        currencySymbol=""
+        backgroundImage={IMAGES.CARD_BACKGROUND}
+      />
+      
+      <ScrollView 
+        style={styles.content}
+        contentContainerStyle={{paddingTop: 140}}
       >
-        <View style={styles.contentContainer}>
-          <Text style={[styles.sectionTitle, { marginTop: 0 }]}>Preguntas Frecuentes</Text>
+        <Text style={styles.headerTitle}>Preguntas Comunes</Text>
+        
+        <AccordionItem 
+          title="Agentes" 
+          isOpen={openSections.agents}
+          toggleOpen={() => toggleSection('agents')}
+        >
+          <TouchableOpacity 
+            style={styles.questionButton}
+            onPress={() => handleNavigation('HelpDetail', { 
+              title: 'Agentes', 
+              questionId: 'agent-function' 
+            })}
+          >
+            <Text style={styles.questionText}>¿Como funcionan los agentes?</Text>
+            <Ionicons name="chevron-forward" size={24} color={COLORS.text} />
+          </TouchableOpacity>
           
-          <View style={styles.faqContainer}>
-            {faqData.map(renderFAQItem)}
-          </View>
+          <TouchableOpacity 
+            style={styles.questionButton}
+            onPress={() => handleNavigation('HelpDetail', { 
+              title: 'Agentes', 
+              questionId: 'agent-money' 
+            })}
+          >
+            <Text style={styles.questionText}>¿Los Agentes usan mi dinero?</Text>
+            <Ionicons name="chevron-forward" size={24} color={COLORS.text} />
+          </TouchableOpacity>
           
-          <Text style={styles.sectionTitle}>Contacto</Text>
+          <TouchableOpacity 
+            style={styles.questionButton}
+            onPress={() => handleNavigation('HelpDetail', { 
+              title: 'Agentes', 
+              questionId: 'agent-intensity' 
+            })}
+          >
+            <Text style={styles.questionText}>Intensidad en los agentes</Text>
+            <Ionicons name="chevron-forward" size={24} color={COLORS.text} />
+          </TouchableOpacity>
+        </AccordionItem>
+        
+        <AccordionItem 
+          title="Informacion Bancaria" 
+          isOpen={openSections.banking}
+          toggleOpen={() => toggleSection('banking')}
+        >
+          <TouchableOpacity style={styles.questionButton}>
+            <Text style={styles.questionText}>¿Cómo agregar mi cuenta bancaria?</Text>
+            <Ionicons name="chevron-forward" size={24} color={COLORS.text} />
+          </TouchableOpacity>
           
-          <View style={styles.contactContainer}>
-            <TouchableOpacity style={styles.contactItem}>
-              <Ionicons name="mail" size={24} color={COLORS.primary} />
-              <Text style={styles.contactText}>support@coinlab.com</Text>
-            </TouchableOpacity>
-            
-            <TouchableOpacity style={styles.contactItem}>
-              <Ionicons name="logo-twitter" size={24} color={COLORS.primary} />
-              <Text style={styles.contactText}>@CoinLabApp</Text>
-            </TouchableOpacity>
-            
-            <TouchableOpacity style={styles.contactItem}>
-              <Ionicons name="call" size={24} color={COLORS.primary} />
-              <Text style={styles.contactText}>+1 (800) 555-1234</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
+          <TouchableOpacity style={styles.questionButton}>
+            <Text style={styles.questionText}>Transferencias y retiros</Text>
+            <Ionicons name="chevron-forward" size={24} color={COLORS.text} />
+          </TouchableOpacity>
+        </AccordionItem>
+        
+        <AccordionItem 
+          title="Seguridad" 
+          isOpen={openSections.security}
+          toggleOpen={() => toggleSection('security')}
+        >
+          <TouchableOpacity style={styles.questionButton}>
+            <Text style={styles.questionText}>¿Cómo proteger mi cuenta?</Text>
+            <Ionicons name="chevron-forward" size={24} color={COLORS.text} />
+          </TouchableOpacity>
+          
+          <TouchableOpacity style={styles.questionButton}>
+            <Text style={styles.questionText}>Autenticación de dos factores</Text>
+            <Ionicons name="chevron-forward" size={24} color={COLORS.text} />
+          </TouchableOpacity>
+        </AccordionItem>
       </ScrollView>
-    </ResponsiveScreenLayout>
+      
+      <View style={styles.footer}>
+        <TouchableOpacity style={styles.moreOptionsButton}>
+          <Ionicons name="chatbox-outline" size={24} color={COLORS.white} />
+          <Text style={styles.moreOptionsText}>Mas Opciones</Text>
+        </TouchableOpacity>
+      </View>
+    </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
-  scrollView: {
+  container: {
     flex: 1,
-    width: '100%',
     backgroundColor: COLORS.background,
-    borderWidth: 0,
-    borderTopWidth: 0,
   },
-  scrollContent: {
-    paddingBottom: 60,
-    borderWidth: 0,
-    borderTopWidth: 0,
-    paddingTop: 0,
+  content: {
+    flex: 1,
+    paddingHorizontal: 20,
   },
-  contentContainer: {
-    paddingHorizontal: 15,
-    width: '100%',
-    borderWidth: 0,
-    borderTopWidth: 0,
-    paddingTop: 0,
-    marginTop: 0,
-  },
-  sectionTitle: {
-    fontSize: 20,
+  headerTitle: {
+    fontSize: 24,
     fontWeight: 'bold',
-    color: COLORS.text,
-    marginBottom: 15,
-    marginTop: 10,
-    width: '100%',
-    borderWidth: 0,
-    borderTopWidth: 0,
-  },
-  faqContainer: {
     marginBottom: 20,
-    width: '100%',
-    borderWidth: 0,
-    borderTopWidth: 0,
-    paddingTop: 0,
-    marginTop: 0,
+    color: COLORS.text,
+    paddingTop: 10,
   },
-  faqItem: {
+  accordionContainer: {
+    marginBottom: 20,
+    borderBottomWidth: 1,
+    borderBottomColor: '#EEEEEE',
     backgroundColor: COLORS.lightGray,
-    borderRadius: 10,
-    padding: 15,
-    marginBottom: 15,
-    borderWidth: 1,
-    borderColor: COLORS.mediumGray,
-    width: '100%',
+    borderRadius: 15,
+    overflow: 'hidden',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
   },
-  question: {
+  accordionHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: 15,
+    paddingHorizontal: 15,
+    backgroundColor: COLORS.white,
+  },
+  accordionTitle: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: COLORS.primary,
-    marginBottom: 8,
-  },
-  answer: {
-    fontSize: 14,
     color: COLORS.text,
-    lineHeight: 22,
   },
-  contactContainer: {
-    backgroundColor: COLORS.lightGray,
-    borderRadius: 10,
-    padding: 15,
-    marginBottom: 20,
-    borderWidth: 1,
-    borderColor: COLORS.mediumGray,
-    width: '100%',
+  accordionContent: {
+    paddingBottom: 5,
   },
-  contactItem: {
+  questionButton: {
     flexDirection: 'row',
+    justifyContent: 'space-between',
     alignItems: 'center',
-    padding: 10,
+    paddingVertical: 15,
+    paddingHorizontal: 15,
     borderBottomWidth: 1,
-    borderBottomColor: COLORS.mediumGray,
+    borderBottomColor: '#EEEEEE',
+    backgroundColor: COLORS.white,
   },
-  contactText: {
-    marginLeft: 10,
+  questionText: {
     fontSize: 16,
     color: COLORS.text,
+    flex: 1,
+    paddingRight: 10,
+  },
+  footer: {
+    paddingHorizontal: 20,
+    paddingVertical: 15,
+    borderTopWidth: 1,
+    borderTopColor: '#EEEEEE',
+  },
+  moreOptionsButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#171717',
+    paddingVertical: 15,
+    borderRadius: 50,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 3,
+    elevation: 3,
+  },
+  moreOptionsText: {
+    color: COLORS.white,
+    marginLeft: 10,
+    fontSize: 16,
+    fontWeight: '600',
   },
 });
 
