@@ -200,10 +200,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   cryptoIcon: {
-    width: 50,
-    height: 50,
+    width: 45,
+    height: 45,
     marginRight: 15,
-    borderRadius: 25,
+    borderRadius: 22.5,
+    resizeMode: 'contain',
+    padding: 5,
   },
   cryptoInfo: {
     justifyContent: 'center',
@@ -263,10 +265,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   userIcon: {
-    width: 50,
-    height: 50,
+    width: 45,
+    height: 45,
     marginRight: 15,
-    borderRadius: 25,
+    borderRadius: 22.5,
+    resizeMode: 'contain',
+    padding: 5,
   },
   movementInfo: {
     justifyContent: 'center',
