@@ -4,7 +4,7 @@ import COLORS from '../../theme/colors';
 import { IMAGES } from '../../assets/index';
 import { ResponsiveScreenLayout } from '../../components/Layout';
 import { Ionicons } from 'react-native-vector-icons';
-import { useData, Movement } from '../../context/DataContext';
+import { useData, Movement, Agent } from '../../context/DataContext';
 
 // Types for cryptocurrency data
 interface Cryptocurrency {
@@ -50,10 +50,12 @@ const CryptoCard: React.FC<{ crypto: Cryptocurrency }> = ({ crypto }) => {
         <Image source={crypto.icon} style={styles.cryptoIcon} />
         <View style={styles.cryptoInfo}>
           <Text style={styles.cryptoName}>{crypto.name}</Text>
-          <Text style={styles.cryptoDetails}>
-            {crypto.agresividad ? `Agresividad: ${crypto.agresividad}` : `Intensidad: ${crypto.intensidad}`}
-          </Text>
-          <Text style={styles.cryptoDetails}>Tiempo: {crypto.tiempo}</Text>
+          <View style={styles.cryptoDetailsContainer}>
+            <Text style={styles.cryptoDetails}>
+              {crypto.agresividad ? `Agresividad: ${crypto.agresividad}` : `Intensidad: ${crypto.intensidad}`}
+            </Text>
+            <Text style={styles.cryptoDetails}>Tiempo: {crypto.tiempo}</Text>
+          </View>
         </View>
       </View>
       <View style={styles.cryptoRight}>
@@ -66,7 +68,7 @@ const CryptoCard: React.FC<{ crypto: Cryptocurrency }> = ({ crypto }) => {
             size={16} 
             color={crypto.priceUp ? COLORS.success : COLORS.error} 
           />
-          <Text style={styles.percentage}>
+          <Text style={[styles.percentage, crypto.priceUp ? styles.priceUp : styles.priceDown]}>
             {crypto.percentage}
           </Text>
         </View>
@@ -75,28 +77,70 @@ const CryptoCard: React.FC<{ crypto: Cryptocurrency }> = ({ crypto }) => {
   );
 };
 
-const MovementCard: React.FC<{ movement: Movement }> = ({ movement }) => {
+// Component to display agent as a movement
+const AgentMovementCard: React.FC<{ agent: Agent, index: number }> = ({ agent, index }) => {
+  // Determine cryptocurrency and action based on agent name
+  const getCryptoCurrency = (agentName: string) => {
+    if (agentName.includes('Alpha')) return 'Bitcoin';
+    if (agentName.includes('Beta')) return 'Ethereum';
+    if (agentName.includes('Delta')) return 'Bitcoin';
+    if (agentName.includes('Gamma')) return 'Doge';
+    if (agentName.includes('Omega')) return 'Binance';
+    return 'Bitcoin';
+  };
+  
+  const getAction = (agentName: string, index: number) => {
+    // Specific actions based on agent names
+    if (agentName.includes('Alpha')) return 'Compra';
+    if (agentName.includes('Beta')) return 'Inversión';
+    if (agentName.includes('Delta')) return 'Venta';
+    
+    const actions = ['Compra', 'Venta', 'Inversión'];
+    return actions[index % actions.length];
+  };
+  
+  const getMovementType = (status: string) => {
+    // Movement type based on agent status
+    switch(status) {
+      case 'active': return 'Trading';
+      case 'paused': return 'Largo Plazo';
+      case 'inactive': return 'Alta Frecuencia';
+      default: return 'Trading';
+    }
+  };
+
+  const currency = getCryptoCurrency(agent.name);
+  const action = getAction(agent.name, index);
+  const movementType = getMovementType(agent.status);
+  
+  // Use actual profit data from agent for price direction
+  const priceUp = agent.profit.startsWith('+');
+  const amount = priceUp ? `+$${agent.investment}` : `-$${agent.investment}`;
+  
   return (
     <View style={styles.movementCard}>
       <View style={styles.movementLeft}>
-        <Image source={movement.icon} style={styles.userIcon} />
+        <Image source={IMAGES.USER_ICON} style={styles.userIcon} />
         <View style={styles.movementInfo}>
-          <Text style={styles.movementType}>{movement.type}</Text>
-          <Text style={styles.movementAction}>{movement.action}</Text>
+          <Text style={styles.movementType}>{agent.name}</Text>
+          <Text style={styles.movementAction}>{action}</Text>
         </View>
       </View>
       <View style={styles.movementRight}>
-        <Text style={[styles.movementAmount, movement.priceUp ? styles.priceUp : styles.priceDown]}>
-          {movement.amount}
+        <Text style={[styles.movementAmount, priceUp ? styles.priceUp : styles.priceDown]}>
+          {amount}
         </Text>
-        <Text style={styles.movementCurrency}>{movement.currency}</Text>
+        <Text style={styles.movementCurrency}>{currency}</Text>
       </View>
     </View>
   );
 };
 
 const HomeScreen = () => {
-  const { user, recentMovements } = useData();
+  const { user, agents } = useData();
+  
+  // Get the last 3 agents to display as movements
+  const lastThreeAgents = agents.slice(0, 3);
 
   return (
     <ResponsiveScreenLayout
@@ -121,17 +165,15 @@ const HomeScreen = () => {
             ))}
           </View>
           
+          {/* Separator line */}
+          <View style={styles.separator} />
+          
           {/* Últimos Movimientos Section */}
           <View style={styles.section}>
-            <View style={styles.sectionHeader}>
-              <Text style={styles.sectionTitle}>Últimos Movimientos</Text>
-              <TouchableOpacity style={styles.viewAllButton}>
-                <Text style={styles.viewAllText}>Ver Todos</Text>
-              </TouchableOpacity>
-            </View>
+            <Text style={styles.sectionTitle}>Últimos Movimientos</Text>
             
-            {recentMovements.map(movement => (
-              <MovementCard key={movement.id} movement={movement} />
+            {lastThreeAgents.map((agent, index) => (
+              <AgentMovementCard key={agent.id} agent={agent} index={index} />
             ))}
           </View>
         </View>
@@ -164,41 +206,42 @@ const styles = StyleSheet.create({
     marginBottom: 15,
     marginTop: 10,
   },
+  separator: {
+    height: 1,
+    backgroundColor: COLORS.lightGray,
+    width: '100%',
+    marginVertical: 10,
+  },
   // Crypto card styles
   cryptoCard: {
-    backgroundColor: COLORS.white,
-    borderRadius: 10,
-    padding: 16,
-    marginBottom: 15,
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 2,
+    marginBottom: 25,
+    width: '100%',
   },
   cryptoLeft: {
     flexDirection: 'row',
     alignItems: 'center',
   },
   cryptoIcon: {
-    width: 45,
-    height: 45,
+    width: 50,
+    height: 50,
     marginRight: 15,
-    borderRadius: 22.5,
+    borderRadius: 25,
     resizeMode: 'contain',
-    padding: 5,
   },
   cryptoInfo: {
     justifyContent: 'center',
   },
   cryptoName: {
-    fontSize: 20,
+    fontSize: 24,
     fontWeight: 'bold',
     color: COLORS.text,
     marginBottom: 4,
+  },
+  cryptoDetailsContainer: {
+    marginTop: 4,
   },
   cryptoDetails: {
     fontSize: 14,
@@ -209,7 +252,7 @@ const styles = StyleSheet.create({
     alignItems: 'flex-end',
   },
   cryptoPrice: {
-    fontSize: 22,
+    fontSize: 24,
     fontWeight: 'bold',
     marginBottom: 4,
   },
@@ -221,28 +264,20 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: 'bold',
     marginLeft: 2,
-    color: COLORS.text,
   },
   priceUp: {
-    color: COLORS.success,
+    color: '#4CAF50',
   },
   priceDown: {
     color: COLORS.error,
   },
   // Movement card styles
   movementCard: {
-    backgroundColor: COLORS.white,
-    borderRadius: 10,
-    padding: 16,
-    marginBottom: 15,
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 2,
+    marginBottom: 20,
+    width: '100%',
   },
   movementLeft: {
     flexDirection: 'row',
@@ -253,8 +288,6 @@ const styles = StyleSheet.create({
     height: 45,
     marginRight: 15,
     borderRadius: 22.5,
-    resizeMode: 'contain',
-    padding: 5,
   },
   movementInfo: {
     justifyContent: 'center',
@@ -266,7 +299,7 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   movementAction: {
-    fontSize: 14,
+    fontSize: 16,
     color: COLORS.textLight,
   },
   movementRight: {
@@ -278,23 +311,8 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   movementCurrency: {
-    fontSize: 14,
+    fontSize: 16,
     color: COLORS.text,
-  },
-  sectionHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  viewAllButton: {
-    padding: 10,
-    backgroundColor: COLORS.primary,
-    borderRadius: 5,
-  },
-  viewAllText: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: COLORS.white,
   },
 });
 
