@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ImageBackground, Dimensions, Animated, Easing, Platform, PanResponder } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ImageBackground, Dimensions, Animated, Easing, Platform, PanResponder, StatusBar } from 'react-native';
 import { Ionicons } from 'react-native-vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -8,45 +8,75 @@ import COLORS from '../../theme/colors';
 // Obtener las dimensiones de la pantalla y ajustar dinámicamente
 const { width, height } = Dimensions.get('window');
 
-// Definimos los colores para el gradiente
-const GRADIENT_COLORS = ['#26318A', '#344190', '#3F4B9F'] as const;
+// Definimos los colores para el gradiente - Fondo negro 
+const GRADIENT_COLORS = ['#171717', '#1A1A1A', '#212121'] as const;
 
-// Ajustar alturas de manera responsiva basada en el tamaño de la pantalla
-const COLLAPSED_HEIGHT = Math.min(height * 0.09, 75); // Ligeramente aumentado para asegurar visibilidad
-const EXPANDED_HEIGHT = Math.min(height * 0.20, 160);
-const DRAG_THRESHOLD = 50; // Umbral para determinar cuando completar el arrastre
+// Manejo del espacio superior para distintas plataformas
+const IS_IOS = Platform.OS === 'ios';
+const NOTCH_SPACE = IS_IOS ? 44 : StatusBar.currentHeight || 0; 
+
+// Ajustar alturas basadas en el tamaño de la pantalla
+const COLLAPSED_HEIGHT = Math.min(height * 0.15, 120) + NOTCH_SPACE; 
+const EXPANDED_HEIGHT = Math.min(height * 0.21, 160) + NOTCH_SPACE; 
+const DRAG_THRESHOLD = 25; 
+
+// Configuración de animación para una experiencia fluida
+const SPRING_CONFIG = {
+  friction: 8,     
+  tension: 40,     
+  useNativeDriver: false
+};
 
 interface HeaderCardProps {
   title?: string;
   showBackButton?: boolean;
   onBackPress?: () => void;
-  backgroundImage?: any; // Opcional: imagen de fondo
-  onHeightChange?: (height: number) => void; // Callback para informar cambios de altura
-  onExpand?: (isExpanded: boolean) => void; // Nuevo callback para informar del estado expandido
+  backgroundImage?: any; 
+  onHeightChange?: (height: number) => void; 
+  onExpand?: (isExpanded: boolean) => void; 
+  amount?: string;
+  amountLabel?: string;
+  profit?: string;
+  profitPercentage?: string;
+  currencySymbol?: string;
+  hideStatusBar?: boolean;
 }
 
 const HeaderCard: React.FC<HeaderCardProps> = ({
-  title = '',
+  title = 'Historial',
   showBackButton = true,
   onBackPress,
   backgroundImage,
   onHeightChange,
   onExpand,
+  amount = '25,006.89',
+  amountLabel = 'USD',
+  profit = 'Beneficio Total',
+  profitPercentage = '',
+  currencySymbol = '$',
+  hideStatusBar = true, // Ocultar barra de estado por defecto
 }) => {
   const navigation = useNavigation();
   const [expanded, setExpanded] = useState(false);
   const heightAnim = useRef(new Animated.Value(COLLAPSED_HEIGHT)).current;
-  const arrowRotation = useRef(new Animated.Value(0)).current;
+  const lastNotifiedHeight = useRef(COLLAPSED_HEIGHT);
+  const isAnimating = useRef(false);
+  const initialRender = useRef(true);
   
   // Valor para seguir el arrastre manual
   const dragY = useRef(new Animated.Value(0)).current;
   
-  // Notificar altura actual al padre - función auxiliar
+  // Notificar altura actual al padre - evitar notificaciones innecesarias
   const notifyHeightChange = (height: number) => {
-    if (onHeightChange) {
-      // Asegurarse de que el valor esté dentro de los límites
-      const boundedHeight = Math.max(COLLAPSED_HEIGHT, Math.min(EXPANDED_HEIGHT, height));
-      onHeightChange(boundedHeight);
+    if (initialRender.current || 
+        (onHeightChange && Math.abs(lastNotifiedHeight.current - height) > 2)) {
+      lastNotifiedHeight.current = height;
+      
+      if (onHeightChange) {
+        onHeightChange(height);
+      }
+      
+      initialRender.current = false;
     }
   };
   
@@ -55,135 +85,128 @@ const HeaderCard: React.FC<HeaderCardProps> = ({
     PanResponder.create({
       onStartShouldSetPanResponder: () => true,
       onMoveShouldSetPanResponder: (_, gestureState) => {
-        return Math.abs(gestureState.dy) > 10;
+        return Math.abs(gestureState.dy) > 5; 
       },
       onPanResponderGrant: () => {
-        // Cuando inicia el gesto, capturar valor actual
         dragY.setValue(0);
+        isAnimating.current = true;
       },
       onPanResponderMove: (_, gestureState) => {
-        // Actualizar el valor de arrastre
-        dragY.setValue(gestureState.dy);
+        // Limitar arrastre para evitar valores extremos
+        const drag = expanded 
+          ? Math.max(-20, Math.min(gestureState.dy * 0.8, 50)) 
+          : Math.max(-50, Math.min(gestureState.dy * 0.8, 20)); 
         
-        // Calcular la altura actual durante el arrastre
-        const baseHeight = expanded ? EXPANDED_HEIGHT : COLLAPSED_HEIGHT;
-        const dragAmount = gestureState.dy;
-        const newHeight = baseHeight + dragAmount;
-        
-        // Notificar al componente padre sobre el cambio de altura durante el arrastre
-        notifyHeightChange(newHeight);
+        dragY.setValue(drag); 
       },
       onPanResponderRelease: (_, gestureState) => {
-        // Al soltar, determinar si expandir o colapsar
-        if (!expanded && gestureState.dy < -DRAG_THRESHOLD) {
-          // Arrastre hacia arriba cuando está colapsado
-          toggleExpanded(true);
-        } else if (expanded && gestureState.dy > DRAG_THRESHOLD) {
-          // Arrastre hacia abajo cuando está expandido
-          toggleExpanded(false);
-        } else {
-          // Volver al estado actual si no supera el umbral
-          resetToCurrentState();
-        }
+        // Resetear valor de arrastre inmediatamente
+        dragY.setValue(0);
+        
+        const velocityThreshold = 0.3;
+        const shouldExpand = !expanded && 
+          (gestureState.dy < -DRAG_THRESHOLD || gestureState.vy < -velocityThreshold);
+        const shouldCollapse = expanded && 
+          (gestureState.dy > DRAG_THRESHOLD || gestureState.vy > velocityThreshold);
+        
+        // Pequeño retraso para actualización de interfaz
+        requestAnimationFrame(() => {
+          isAnimating.current = false;
+          
+          if (shouldExpand) {
+            toggleExpanded(true);
+          } else if (shouldCollapse) {
+            toggleExpanded(false);
+          } else {
+            resetToCurrentState();
+          }
+        });
       },
     })
   ).current;
 
   // Inicializar el componente
   useEffect(() => {
-    // Inicializar valores
+    // Ocultar barra de estado para extenderse hasta arriba
+    if (hideStatusBar) {
+      StatusBar.setHidden(true);
+    } else {
+      StatusBar.setBarStyle('light-content');
+      if (Platform.OS === 'android') {
+        StatusBar.setBackgroundColor('#171717');
+        StatusBar.setTranslucent(true);
+      }
+    }
+
     heightAnim.setValue(COLLAPSED_HEIGHT);
-    arrowRotation.setValue(0);
+    lastNotifiedHeight.current = COLLAPSED_HEIGHT;
     
-    // Notificar la altura inicial
+    // Notificar altura inicial
     notifyHeightChange(COLLAPSED_HEIGHT);
     
-    // Actualizar alturas si cambian las dimensiones de la pantalla
+    // Actualizar alturas si cambian las dimensiones
     const handleDimensionsChange = () => {
       const { height: newHeight } = Dimensions.get('window');
-      const newCollapsed = Math.min(newHeight * 0.08, 70);
-      const newExpanded = Math.min(newHeight * 0.20, 160);
+      const newCollapsed = Math.min(newHeight * 0.15, 120) + NOTCH_SPACE;
+      const newExpanded = Math.min(newHeight * 0.21, 160) + NOTCH_SPACE;
       
-      // Actualizar con los nuevos valores
-      heightAnim.setValue(expanded ? newExpanded : newCollapsed);
+      const targetHeight = expanded ? newExpanded : newCollapsed;
+      heightAnim.setValue(targetHeight);
       
-      // Notificar al componente padre
-      notifyHeightChange(expanded ? newExpanded : newCollapsed);
+      notifyHeightChange(targetHeight);
     };
     
-    // Escuchar cambios de dimensión (como rotación de pantalla)
     Dimensions.addEventListener('change', handleDimensionsChange);
     
     return () => {
-      // Remover listener al desmontar
-      // Dimensions.removeEventListener('change', handleDimensionsChange);
+      // Restaurar barra de estado al desmontar
+      if (hideStatusBar) {
+        StatusBar.setHidden(false);
+      }
     };
-  }, []);
+  }, [hideStatusBar]);
 
   // Escuchar cambios en el estado expandido
   useEffect(() => {
-    // Cuando cambia el estado expandido, actualizar altura y notificar
-    if (expanded) {
-      heightAnim.setValue(EXPANDED_HEIGHT);
-      notifyHeightChange(EXPANDED_HEIGHT);
-    } else {
-      heightAnim.setValue(COLLAPSED_HEIGHT);
-      notifyHeightChange(COLLAPSED_HEIGHT);
-    }
+    if (isAnimating.current) return; 
     
-    // Notificar al componente padre sobre el cambio de estado
+    isAnimating.current = true;
+    
+    // Notificar cambio de estado al padre
     if (onExpand) {
       onExpand(expanded);
     }
+    
+    const targetHeight = expanded ? EXPANDED_HEIGHT : COLLAPSED_HEIGHT;
+    notifyHeightChange(targetHeight);
+    
+    Animated.spring(heightAnim, {
+      toValue: targetHeight,
+      ...SPRING_CONFIG
+    }).start(() => {
+      isAnimating.current = false;
+    });
   }, [expanded]);
 
-  // Escuchar cambios en la altura animada (para gestos y animaciones en curso)
-  useEffect(() => {
-    const listener = heightAnim.addListener(({ value }) => {
-      notifyHeightChange(value);
-    });
-
-    return () => {
-      heightAnim.removeListener(listener);
-    };
-  }, []);
-
   const resetToCurrentState = () => {
-    // Regresar a la altura actual según el estado
+    if (isAnimating.current) return; 
+    
+    isAnimating.current = true;
+    
+    const targetHeight = expanded ? EXPANDED_HEIGHT : COLLAPSED_HEIGHT;
+    notifyHeightChange(targetHeight);
+    
     Animated.spring(heightAnim, {
-      toValue: expanded ? EXPANDED_HEIGHT : COLLAPSED_HEIGHT,
-      friction: 6,
-      useNativeDriver: false,
+      toValue: targetHeight,
+      ...SPRING_CONFIG
     }).start(() => {
-      // Notificar la altura final después de la animación
-      notifyHeightChange(expanded ? EXPANDED_HEIGHT : COLLAPSED_HEIGHT);
+      isAnimating.current = false;
     });
   };
 
   const toggleExpanded = (newExpanded = !expanded) => {
-    console.log("toggleExpanded called with value:", newExpanded);
-    
-    // Cambiar el estado
+    if (newExpanded === expanded || isAnimating.current) return;
     setExpanded(newExpanded);
-    
-    // Cambiar la altura 
-    const targetHeight = newExpanded ? EXPANDED_HEIGHT : COLLAPSED_HEIGHT;
-    
-    // Animar con spring para efecto natural
-    Animated.spring(heightAnim, {
-      toValue: targetHeight,
-      friction: 6,
-      tension: 40,
-      useNativeDriver: false
-    }).start();
-    
-    // Animar la rotación de la flecha
-    Animated.timing(arrowRotation, {
-      toValue: newExpanded ? 1 : 0,
-      duration: 300,
-      easing: Easing.inOut(Easing.ease),
-      useNativeDriver: true,
-    }).start();
   };
 
   const handleBackPress = () => {
@@ -195,155 +218,133 @@ const HeaderCard: React.FC<HeaderCardProps> = ({
   };
 
   const handleProfilePress = () => {
-    // Navegar al perfil - implementar según la navegación
     console.log('Navegar al perfil');
     // navigation.navigate('Profile');
   };
-
-  // Interpolaciones para animaciones
-  const arrowRotateStyle = {
-    transform: [
-      {
-        rotate: arrowRotation.interpolate({
-          inputRange: [0, 1],
-          outputRange: ['0deg', '180deg'],
-        }),
-      },
-    ],
-  };
   
-  // Calcular la altura dinámica basada en el arrastre
+  // Calcular altura dinámica basada en arrastre
   const dynamicHeight = Animated.add(
     heightAnim,
     dragY.interpolate({
-      inputRange: [-100, 0, 100],
-      outputRange: [50, 0, -50],  // Limitar cuánto puede estirarse
+      inputRange: [-50, 0, 50],
+      outputRange: [25, 0, -25],
       extrapolate: 'clamp',
     })
-  );
-
-  const renderCardContent = () => (
-    <View style={styles.contentContainer}>
-      <View style={styles.topSection}>
-        <View style={styles.leftSection}>
-          {showBackButton && (
-            <TouchableOpacity style={styles.iconButton} onPress={handleBackPress}>
-              <Ionicons name="arrow-back" size={24} color={COLORS.white} />
-            </TouchableOpacity>
-          )}
-          
-          <View style={styles.titleContainer}>
-            {title ? <Text style={styles.title}>{title}</Text> : null}
-          </View>
-        </View>
-        
-        <View style={styles.rightSection}>
-          <TouchableOpacity style={styles.profileButton} onPress={handleProfilePress}>
-            <Ionicons name="person-circle-outline" size={32} color={COLORS.white} />
-          </TouchableOpacity>
-        </View>
-      </View>
-      
-      {/* Sección de botones de acción - Visible solo cuando está expandido */}
-      <Animated.View style={[
-        styles.bottomSection,
-        { 
-          opacity: heightAnim.interpolate({
-            inputRange: [COLLAPSED_HEIGHT, COLLAPSED_HEIGHT + (EXPANDED_HEIGHT - COLLAPSED_HEIGHT) * 0.3, EXPANDED_HEIGHT],
-            outputRange: [0, 0.5, 1],
-            extrapolate: 'clamp',
-          }),
-          maxHeight: heightAnim.interpolate({
-            inputRange: [COLLAPSED_HEIGHT, EXPANDED_HEIGHT],
-            outputRange: [0, 100],
-            extrapolate: 'clamp',
-          }),
-        }
-      ]}>
-        <TouchableOpacity style={styles.actionButton}>
-          <Ionicons name="card-outline" size={28} color={COLORS.white} />
-          <Text style={styles.actionText}>Tarjetas</Text>
-        </TouchableOpacity>
-        
-        <TouchableOpacity style={styles.actionButton}>
-          <Ionicons name="eye-outline" size={28} color={COLORS.white} />
-          <Text style={styles.actionText}>Ver</Text>
-        </TouchableOpacity>
-        
-        <TouchableOpacity style={styles.actionButton}>
-          <Ionicons name="analytics-outline" size={28} color={COLORS.white} />
-          <Text style={styles.actionText}>Análisis</Text>
-        </TouchableOpacity>
-      </Animated.View>
-      
-      {/* Indicador de arrastre / expandir en el centro inferior */}
-      <View style={styles.expandButtonContainer}>
-        <TouchableOpacity 
-          style={styles.expandButton} 
-          onPress={handleToggleExpand}
-          activeOpacity={0.7}
-        >
-          <Animated.View style={arrowRotateStyle}>
-            <Ionicons 
-              name="chevron-down" 
-              size={24} 
-              color={COLORS.white} 
-            />
-          </Animated.View>
-        </TouchableOpacity>
-      </View>
-    </View>
   );
 
   // Componentes Animados
   const AnimatedImageBackground = Animated.createAnimatedComponent(ImageBackground);
   const AnimatedLinearGradient = Animated.createAnimatedComponent(LinearGradient);
 
-  // Función auxiliar para expandir/contraer
-  const handleToggleExpand = () => {
-    console.log("Expand button pressed, toggling state");
-    toggleExpanded();
-  };
-
   return (
     <Animated.View 
       style={[
-        styles.container,
-        { height: dynamicHeight } // Usar altura dinámica que responde al arrastre
+        styles.absoluteContainer,
+        { height: dynamicHeight } 
       ]}
-      {...panResponder.panHandlers} // Mover el panResponder aquí para que funcione en toda la tarjeta
     >
       {backgroundImage ? (
         <AnimatedImageBackground
           source={backgroundImage}
-          style={[
-            styles.cardContainer,
-            { height: dynamicHeight }
-          ]}
+          style={[styles.cardContainer, { height: dynamicHeight }]}
           imageStyle={styles.backgroundImage}
-          resizeMode="cover" // Asegurar que la imagen cubra todo el espacio
+          resizeMode="cover"
         >
-          {renderCardContent()}
+          <View style={styles.contentWrapper}>
+            <View style={styles.innerContent}>
+              <View style={styles.topSection}>
+                <View style={styles.leftSection}>
+                  {showBackButton && (
+                    <TouchableOpacity style={styles.navButton} onPress={handleBackPress}>
+                      <Ionicons name="chevron-back" size={22} color={COLORS.white} />
+                    </TouchableOpacity>
+                  )}
+                  
+                  <TouchableOpacity style={styles.navButton}>
+                    <Ionicons name="card-outline" size={22} color={COLORS.white} />
+                  </TouchableOpacity>
+                  
+                  <TouchableOpacity style={styles.navButton}>
+                    <Ionicons name="eye-outline" size={22} color={COLORS.white} />
+                  </TouchableOpacity>
+                </View>
+                
+                <View style={styles.rightSection}>
+                  <TouchableOpacity style={styles.profileButton} onPress={handleProfilePress}>
+                    <Ionicons name="person-circle-outline" size={26} color={COLORS.white} />
+                  </TouchableOpacity>
+                </View>
+              </View>
+              
+              {/* Información financiera */}
+              <View style={styles.financialInfoContainer}>
+                <Text style={styles.titleText}>{title}</Text>
+                
+                <View style={styles.amountContainer}>
+                  <Text style={styles.amountText}>{amount}</Text>
+                  <Text style={styles.currencyText}> {amountLabel}</Text>
+                </View>
+                
+                <Text style={styles.profitLabel}>{profit}</Text>
+              </View>
+            </View>
+          </View>
         </AnimatedImageBackground>
       ) : (
         <AnimatedLinearGradient
           colors={GRADIENT_COLORS}
           start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
-          style={[
-            styles.cardContainer,
-            { height: dynamicHeight }
-          ]}
+          end={{ x: 0, y: 1 }}
+          style={[styles.cardContainer, { height: dynamicHeight }]}
         >
-          {renderCardContent()}
+          <View style={styles.contentWrapper}>
+            <View style={styles.innerContent}>
+              <View style={styles.topSection}>
+                <View style={styles.leftSection}>
+                  {showBackButton && (
+                    <TouchableOpacity style={styles.navButton} onPress={handleBackPress}>
+                      <Ionicons name="chevron-back" size={22} color={COLORS.white} />
+                    </TouchableOpacity>
+                  )}
+                  
+                  <TouchableOpacity style={styles.navButton}>
+                    <Ionicons name="card-outline" size={22} color={COLORS.white} />
+                  </TouchableOpacity>
+                  
+                  <TouchableOpacity style={styles.navButton}>
+                    <Ionicons name="eye-outline" size={22} color={COLORS.white} />
+                  </TouchableOpacity>
+                </View>
+                
+                <View style={styles.rightSection}>
+                  <TouchableOpacity style={styles.profileButton} onPress={handleProfilePress}>
+                    <Ionicons name="person-circle-outline" size={26} color={COLORS.white} />
+                  </TouchableOpacity>
+                </View>
+              </View>
+              
+              {/* Información financiera */}
+              <View style={styles.financialInfoContainer}>
+                <Text style={styles.titleText}>{title}</Text>
+                
+                <View style={styles.amountContainer}>
+                  <Text style={styles.amountText}>{amount}</Text>
+                  <Text style={styles.currencyText}> {amountLabel}</Text>
+                </View>
+                
+                <Text style={styles.profitLabel}>{profit}</Text>
+              </View>
+            </View>
+          </View>
         </AnimatedLinearGradient>
       )}
       
-      {/* Botón de expandir visible en toda la tarjeta */}
+      {/* Área táctil para deslizar con barra indicadora */}
       <TouchableOpacity 
         style={styles.expandTouchArea}
-        onPress={handleToggleExpand}
+        onPress={() => toggleExpanded()}
         activeOpacity={0.9}
+        {...panResponder.panHandlers}
       >
         <View style={styles.dragIndicator} />
       </TouchableOpacity>
@@ -352,114 +353,77 @@ const HeaderCard: React.FC<HeaderCardProps> = ({
 };
 
 const styles = StyleSheet.create({
-  container: {
+  absoluteContainer: {
     width: '100%',
-    paddingHorizontal: 12,
-    backgroundColor: 'transparent',
+    backgroundColor: '#171717',
     zIndex: 10,
     overflow: 'visible',
     position: 'absolute',
-    top: 0, // Aquí ya no necesitamos margen, lo manejaremos en cada pantalla
+    top: -NOTCH_SPACE, // Posición negativa para cubrir el notch
     left: 0,
     right: 0,
+    marginTop: 0,
+  },
+  contentWrapper: {
+    flex: 1,
+    width: '100%',
+    paddingTop: NOTCH_SPACE, // Compensar la posición negativa
+  },
+  innerContent: {
+    flex: 1,
+    padding: 16,
+    paddingTop: IS_IOS ? 16 : 12,
   },
   cardContainer: {
-    borderRadius: 16, // Reducimos ligeramente el radio para un aspecto más limpio
+    width: '100%',
+    borderRadius: 0,
+    borderTopLeftRadius: 0,
+    borderTopRightRadius: 0,
+    borderBottomLeftRadius: 20,
+    borderBottomRightRadius: 20,
     overflow: 'hidden',
     elevation: 8,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 5 },
     shadowOpacity: 0.3,
     shadowRadius: 8,
-    width: '100%',
-  },
-  contentContainer: {
-    flex: 1,
-    padding: 12,
-    position: 'relative',
   },
   backgroundImage: {
-    borderRadius: 16,
     width: '100%',
     height: '100%',
+    borderBottomLeftRadius: 20,
+    borderBottomRightRadius: 20,
   },
   topSection: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 6,
-    minHeight: 40,
-  },
-  expandButtonContainer: {
-    position: 'absolute',
-    bottom: -15,
-    left: 0,
-    right: 0,
-    alignItems: 'center',
-    justifyContent: 'center',
-    zIndex: 100,
-  },
-  expandButton: {
-    backgroundColor: 'rgba(0, 0, 0, 0.2)',
-    borderRadius: 15,
-    padding: 5,
-    paddingHorizontal: 15,
-    width: 40,
-    height: 30,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  bottomSection: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    alignItems: 'center',
-    paddingHorizontal: 10,
-    marginTop: 12,
-    overflow: 'hidden',
+    marginBottom: 12,
+    minHeight: 32,
   },
   leftSection: {
     flexDirection: 'row',
     alignItems: 'center',
     flex: 1,
+    gap: 15,
   },
   rightSection: {
     alignItems: 'flex-end',
-    paddingLeft: 8,
   },
-  titleContainer: {
-    marginLeft: 8,
-    flex: 1,
-  },
-  title: {
-    color: COLORS.white,
-    fontSize: 18,
-    fontWeight: 'bold',
-  },
-  iconButton: {
-    padding: 4,
+  navButton: {
+    padding: 5,
   },
   profileButton: {
-    padding: 4,
-  },
-  actionButton: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: 8,
-  },
-  actionText: {
-    color: COLORS.white,
-    fontSize: 14,
-    marginTop: 6,
-    fontWeight: '500',
+    padding: 5,
   },
   dragIndicator: {
     position: 'absolute',
-    bottom: -4,
+    bottom: 0,
     alignSelf: 'center',
-    width: 40,
+    width: 70,
     height: 4,
-    borderRadius: 2,
-    backgroundColor: 'rgba(255, 255, 255, 0.5)',
+    borderRadius: 4,
+    backgroundColor: 'rgba(0, 0, 0, 0.3)',
     zIndex: 101,
   },
   expandTouchArea: {
@@ -471,6 +435,41 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     zIndex: 101,
+  },
+  financialInfoContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 6,
+    marginBottom: 12,
+  },
+  titleText: {
+    color: COLORS.white,
+    fontSize: 14,
+    opacity: 0.8,
+    marginBottom: 6,
+  },
+  amountContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginVertical: 6,
+  },
+  amountText: {
+    color: COLORS.white,
+    fontSize: 32,
+    fontWeight: 'bold',
+  },
+  currencyText: {
+    color: COLORS.white,
+    fontSize: 16,
+    opacity: 0.9,
+    alignSelf: 'flex-end',
+    marginBottom: 5,
+  },
+  profitLabel: {
+    color: COLORS.white,
+    fontSize: 14,
+    opacity: 0.8,
   },
 });
 
