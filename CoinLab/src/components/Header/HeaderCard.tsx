@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ImageBackground, Dimensions, Animated, Easing, Platform, PanResponder, StatusBar } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ImageBackground, Dimensions, Animated, Platform, PanResponder, StatusBar, SafeAreaView } from 'react-native';
 import { Ionicons } from 'react-native-vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -9,7 +9,8 @@ import COLORS from '../../theme/colors';
 const { width, height } = Dimensions.get('window');
 
 // Definimos los colores para el gradiente - Fondo negro 
-const GRADIENT_COLORS = ['#171717', '#1A1A1A', '#212121'] as const;
+const GRADIENT_COLORS = ['#171717', '#171717', '#171717'] as const;
+const BACKGROUND_COLOR = '#171717';
 
 // Manejo del espacio superior para distintas plataformas
 const IS_IOS = Platform.OS === 'ios';
@@ -17,14 +18,23 @@ const NOTCH_SPACE = IS_IOS ? 44 : StatusBar.currentHeight || 0;
 
 // Ajustar alturas basadas en el tamaño de la pantalla
 const COLLAPSED_HEIGHT = Math.min(height * 0.10, 80) + NOTCH_SPACE; // Altura reducida cuando está contraído
-const EXPANDED_HEIGHT = Math.min(height * 0.35, 250) + NOTCH_SPACE; // Altura aumentada cuando está expandido
+const EXPANDED_HEIGHT = Math.min(height * 0.45, 320) + NOTCH_SPACE; // Altura aumentada aún más
 const DRAG_THRESHOLD = 25; 
 
-// Configuración de animación para una experiencia fluida
+// Radio de las esquinas redondeadas
+const MIN_BORDER_RADIUS = 25;
+const MAX_BORDER_RADIUS = 40;
+
+// Configuración de animación para una experiencia fluida - Todo sin native driver
 const SPRING_CONFIG = {
   friction: 8,     
   tension: 40,     
-  useNativeDriver: false
+  useNativeDriver: false // Desactivar native driver para todas las animaciones
+};
+
+const TIMING_CONFIG = {
+  duration: 200,
+  useNativeDriver: false // Desactivar native driver para todas las animaciones
 };
 
 interface HeaderCardProps {
@@ -58,6 +68,8 @@ const HeaderCard: React.FC<HeaderCardProps> = ({
 }) => {
   const navigation = useNavigation();
   const [expanded, setExpanded] = useState(false);
+  
+  // Crear todas las referencias de animación con useNativeDriver: false explícitamente
   const heightAnim = useRef(new Animated.Value(COLLAPSED_HEIGHT)).current;
   const lastNotifiedHeight = useRef(COLLAPSED_HEIGHT);
   const isAnimating = useRef(false);
@@ -144,9 +156,12 @@ const HeaderCard: React.FC<HeaderCardProps> = ({
     // Iniciar expandido por defecto para mostrar toda la información
     setExpanded(true);
     
+    // Reiniciar todos los valores animados para evitar conflictos
     heightAnim.setValue(EXPANDED_HEIGHT);
+    dragY.setValue(0);
+    infoOpacity.setValue(1);
+    
     lastNotifiedHeight.current = EXPANDED_HEIGHT;
-    infoOpacity.setValue(1); // Comenzar visible
     
     // Notificar altura inicial
     notifyHeightChange(EXPANDED_HEIGHT);
@@ -195,11 +210,10 @@ const HeaderCard: React.FC<HeaderCardProps> = ({
       isAnimating.current = false;
     });
     
-    // Animar la opacidad de la información
+    // Animar la opacidad de la información - también sin native driver
     Animated.timing(infoOpacity, {
       toValue: expanded ? 1 : 0,
-      duration: 200,
-      useNativeDriver: false
+      ...TIMING_CONFIG
     }).start();
   }, [expanded]);
 
@@ -247,18 +261,8 @@ const HeaderCard: React.FC<HeaderCardProps> = ({
     })
   );
   
-  // Animación de la sombra y border radius
-  const shadowOpacity = heightAnim.interpolate({
-    inputRange: [COLLAPSED_HEIGHT, EXPANDED_HEIGHT],
-    outputRange: [0.3, 0],
-    extrapolate: 'clamp'
-  });
-  
-  const borderRadius = heightAnim.interpolate({
-    inputRange: [COLLAPSED_HEIGHT, EXPANDED_HEIGHT],
-    outputRange: [20, 30],
-    extrapolate: 'clamp'
-  });
+  // Valor fijo para el border radius en lugar de animado
+  const BORDER_RADIUS = 40; // Aumentamos el radio para que sea más notorio
 
   // Componentes Animados
   const AnimatedImageBackground = Animated.createAnimatedComponent(ImageBackground);
@@ -270,158 +274,169 @@ const HeaderCard: React.FC<HeaderCardProps> = ({
         styles.absoluteContainer,
         { 
           height: dynamicHeight,
-          shadowOpacity: shadowOpacity,
-          borderBottomLeftRadius: borderRadius,
-          borderBottomRightRadius: borderRadius 
+          shadowOpacity: expanded ? 0 : 0.3,
+          borderBottomLeftRadius: BORDER_RADIUS,
+          borderBottomRightRadius: BORDER_RADIUS 
         } 
       ]}
     >
-      {backgroundImage ? (
-        <AnimatedImageBackground
-          source={backgroundImage}
-          style={[
-            styles.cardContainer, 
-            { 
-              height: dynamicHeight,
-              borderBottomLeftRadius: borderRadius,
-              borderBottomRightRadius: borderRadius
-            }
-          ]}
-          imageStyle={[
-            styles.backgroundImage,
-            {
-              borderBottomLeftRadius: borderRadius,
-              borderBottomRightRadius: borderRadius
-            }
-          ]}
-          resizeMode="cover"
-        >
-          <View style={styles.contentWrapper}>
-            <View style={styles.innerContent}>
-              <View style={styles.topSection}>
-                <View style={styles.leftSection}>
-                  {showBackButton && (
-                    <TouchableOpacity style={styles.navButton} onPress={handleBackPress}>
-                      <Ionicons name="chevron-back" size={22} color={COLORS.white} />
-                    </TouchableOpacity>
-                  )}
-                  
-                  <TouchableOpacity style={styles.navButton}>
-                    <Ionicons name="card-outline" size={22} color={COLORS.white} />
-                  </TouchableOpacity>
-                  
-                  <TouchableOpacity style={styles.navButton}>
-                    <Ionicons name="eye-outline" size={22} color={COLORS.white} />
-                  </TouchableOpacity>
-                </View>
-                
-                <View style={styles.rightSection}>
-                  <TouchableOpacity style={styles.profileButton} onPress={handleProfilePress}>
-                    <Ionicons name="person-circle-outline" size={26} color={COLORS.white} />
-                  </TouchableOpacity>
-                </View>
-              </View>
-              
-              {/* Información financiera - se muestra solo cuando está expandido */}
-              <Animated.View 
-                style={[
-                  styles.financialInfoContainer,
-                  { 
-                    opacity: infoOpacity, 
-                    maxHeight: infoOpacity.interpolate({
-                      inputRange: [0, 1],
-                      outputRange: [0, 200]
-                    }) 
-                  }
-                ]}
-              >
-                <Text style={styles.titleText}>{title}</Text>
-                
-                <View style={styles.amountContainer}>
-                  <Text style={styles.amountText}>{amount}</Text>
-                  <Text style={styles.currencyText}> {amountLabel}</Text>
-                </View>
-                
-                <Text style={styles.profitLabel}>{profit}</Text>
-              </Animated.View>
-            </View>
-          </View>
-        </AnimatedImageBackground>
-      ) : (
-        <AnimatedLinearGradient
-          colors={GRADIENT_COLORS}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 0, y: 1 }}
-          style={[
-            styles.cardContainer, 
-            { 
-              height: dynamicHeight,
-              borderBottomLeftRadius: borderRadius,
-              borderBottomRightRadius: borderRadius
-            }
-          ]}
-        >
-          <View style={styles.contentWrapper}>
-            <View style={styles.innerContent}>
-              <View style={styles.topSection}>
-                <View style={styles.leftSection}>
-                  {showBackButton && (
-                    <TouchableOpacity style={styles.navButton} onPress={handleBackPress}>
-                      <Ionicons name="chevron-back" size={22} color={COLORS.white} />
-                    </TouchableOpacity>
-                  )}
-                  
-                  <TouchableOpacity style={styles.navButton}>
-                    <Ionicons name="card-outline" size={22} color={COLORS.white} />
-                  </TouchableOpacity>
-                  
-                  <TouchableOpacity style={styles.navButton}>
-                    <Ionicons name="eye-outline" size={22} color={COLORS.white} />
-                  </TouchableOpacity>
-                </View>
-                
-                <View style={styles.rightSection}>
-                  <TouchableOpacity style={styles.profileButton} onPress={handleProfilePress}>
-                    <Ionicons name="person-circle-outline" size={26} color={COLORS.white} />
-                  </TouchableOpacity>
-                </View>
-              </View>
-              
-              {/* Información financiera - se muestra solo cuando está expandido */}
-              <Animated.View 
-                style={[
-                  styles.financialInfoContainer,
-                  { 
-                    opacity: infoOpacity, 
-                    maxHeight: infoOpacity.interpolate({
-                      inputRange: [0, 1],
-                      outputRange: [0, 200]
-                    }) 
-                  }
-                ]}
-              >
-                <Text style={styles.titleText}>{title}</Text>
-                
-                <View style={styles.amountContainer}>
-                  <Text style={styles.amountText}>{amount}</Text>
-                  <Text style={styles.currencyText}> {amountLabel}</Text>
-                </View>
-                
-                <Text style={styles.profitLabel}>{profit}</Text>
-              </Animated.View>
-            </View>
-          </View>
-        </AnimatedLinearGradient>
-      )}
-      
-      {/* Área táctil para deslizar con barra indicadora */}
-      <TouchableOpacity 
-        style={styles.expandTouchArea}
-        onPress={() => toggleExpanded()}
-        activeOpacity={0.9}
+      <TouchableOpacity
+        activeOpacity={1}
+        style={styles.fullTouchContainer}
         {...panResponder.panHandlers}
+        onPress={() => toggleExpanded()}
       >
-        <View style={styles.dragIndicator} />
+        {backgroundImage ? (
+          <AnimatedImageBackground
+            source={backgroundImage}
+            style={[
+              styles.cardContainer, 
+              { 
+                height: dynamicHeight,
+                borderBottomLeftRadius: BORDER_RADIUS,
+                borderBottomRightRadius: BORDER_RADIUS
+              }
+            ]}
+            imageStyle={[
+              styles.backgroundImage,
+              {
+                borderBottomLeftRadius: BORDER_RADIUS,
+                borderBottomRightRadius: BORDER_RADIUS
+              }
+            ]}
+            resizeMode="cover"
+          >
+            <View style={styles.contentWrapper}>
+              <View style={styles.innerContent}>
+                <View style={styles.topSection}>
+                  <View style={styles.leftSection}>
+                    {showBackButton && (
+                      <TouchableOpacity style={styles.navButton} onPress={handleBackPress}>
+                        <Ionicons name="chevron-back" size={22} color={COLORS.white} />
+                      </TouchableOpacity>
+                    )}
+                    
+                    <TouchableOpacity style={styles.navButton}>
+                      <Ionicons name="card-outline" size={22} color={COLORS.white} />
+                    </TouchableOpacity>
+                    
+                    <TouchableOpacity style={styles.navButton}>
+                      <Ionicons name="eye-outline" size={22} color={COLORS.white} />
+                    </TouchableOpacity>
+                  </View>
+                  
+                  <View style={styles.rightSection}>
+                    <TouchableOpacity style={styles.profileButton} onPress={handleProfilePress}>
+                      <Ionicons name="person-circle-outline" size={26} color={COLORS.white} />
+                    </TouchableOpacity>
+                  </View>
+                </View>
+                
+                <Animated.View 
+                  style={[
+                    styles.financialInfoContainer,
+                    { 
+                      opacity: infoOpacity, 
+                      maxHeight: infoOpacity.interpolate({
+                        inputRange: [0, 1],
+                        outputRange: [0, 350]
+                      }) 
+                    }
+                  ]}
+                >
+                  <Text style={styles.profitLabel}>{profit}</Text>
+                  
+                  <View style={styles.amountContainer}>
+                    <Text style={styles.amountText}>{amount}</Text>
+                    <Text style={styles.currencyText}> {amountLabel}</Text>
+                  </View>
+                  
+                  <Text style={styles.titleText}>{title}</Text>
+                </Animated.View>
+                
+                {/* Barra indicadora integrada al final del contenido */}
+                <View style={styles.dragIndicatorContainer}>
+                  <View style={[
+                    styles.dragIndicator,
+                    expanded ? styles.dragIndicatorExpanded : styles.dragIndicatorCollapsed
+                  ]} />
+                </View>
+              </View>
+            </View>
+          </AnimatedImageBackground>
+        ) : (
+          <AnimatedLinearGradient
+            colors={GRADIENT_COLORS}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 0, y: 1 }}
+            style={[
+              styles.cardContainer, 
+              { 
+                height: dynamicHeight,
+                borderBottomLeftRadius: BORDER_RADIUS,
+                borderBottomRightRadius: BORDER_RADIUS
+              }
+            ]}
+          >
+            <View style={styles.contentWrapper}>
+              <View style={styles.innerContent}>
+                <View style={styles.topSection}>
+                  <View style={styles.leftSection}>
+                    {showBackButton && (
+                      <TouchableOpacity style={styles.navButton} onPress={handleBackPress}>
+                        <Ionicons name="chevron-back" size={22} color={COLORS.white} />
+                      </TouchableOpacity>
+                    )}
+                    
+                    <TouchableOpacity style={styles.navButton}>
+                      <Ionicons name="card-outline" size={22} color={COLORS.white} />
+                    </TouchableOpacity>
+                    
+                    <TouchableOpacity style={styles.navButton}>
+                      <Ionicons name="eye-outline" size={22} color={COLORS.white} />
+                    </TouchableOpacity>
+                  </View>
+                  
+                  <View style={styles.rightSection}>
+                    <TouchableOpacity style={styles.profileButton} onPress={handleProfilePress}>
+                      <Ionicons name="person-circle-outline" size={26} color={COLORS.white} />
+                    </TouchableOpacity>
+                  </View>
+                </View>
+                
+                <Animated.View 
+                  style={[
+                    styles.financialInfoContainer,
+                    { 
+                      opacity: infoOpacity, 
+                      maxHeight: infoOpacity.interpolate({
+                        inputRange: [0, 1],
+                        outputRange: [0, 350]
+                      }) 
+                    }
+                  ]}
+                >
+                  <Text style={styles.profitLabel}>{profit}</Text>
+                  
+                  <View style={styles.amountContainer}>
+                    <Text style={styles.amountText}>{amount}</Text>
+                    <Text style={styles.currencyText}> {amountLabel}</Text>
+                  </View>
+                  
+                  <Text style={styles.titleText}>{title}</Text>
+                </Animated.View>
+                
+                {/* Barra indicadora integrada al final del contenido */}
+                <View style={styles.dragIndicatorContainer}>
+                  <View style={[
+                    styles.dragIndicator,
+                    expanded ? styles.dragIndicatorExpanded : styles.dragIndicatorCollapsed
+                  ]} />
+                </View>
+              </View>
+            </View>
+          </AnimatedLinearGradient>
+        )}
       </TouchableOpacity>
     </Animated.View>
   );
@@ -430,13 +445,14 @@ const HeaderCard: React.FC<HeaderCardProps> = ({
 const styles = StyleSheet.create({
   absoluteContainer: {
     width: '100%',
-    zIndex: 999, // Incrementar el z-index para estar encima de todo
+    zIndex: 999,
     overflow: 'visible',
     position: 'absolute',
     top: -NOTCH_SPACE, // Posición negativa para cubrir el notch
     left: 0,
     right: 0,
     marginTop: 0,
+    backgroundColor: BACKGROUND_COLOR,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 5 },
     shadowRadius: 8,
@@ -445,15 +461,19 @@ const styles = StyleSheet.create({
   contentWrapper: {
     flex: 1,
     width: '100%',
-    paddingTop: NOTCH_SPACE + 5, // Aumentar ligeramente para evitar cortes en iOS
+    paddingTop: NOTCH_SPACE + 5,
+    backgroundColor: BACKGROUND_COLOR,
   },
   innerContent: {
     flex: 1,
     padding: 16,
-    paddingTop: IS_IOS ? 20 : 16, // Más espacio en la parte superior
+    paddingTop: IS_IOS ? 20 : 16,
+    paddingBottom: 30, // Añadir padding en la parte inferior
+    backgroundColor: BACKGROUND_COLOR,
   },
   cardContainer: {
     width: '100%',
+    backgroundColor: BACKGROUND_COLOR,
     borderRadius: 0,
     borderTopLeftRadius: 0,
     borderTopRightRadius: 0,
@@ -462,13 +482,15 @@ const styles = StyleSheet.create({
   backgroundImage: {
     width: '100%',
     height: '100%',
+    backgroundColor: BACKGROUND_COLOR,
   },
   topSection: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 16, // Aumentar espacio
-    minHeight: 40, // Aumentar altura mínima
+    marginBottom: 16,
+    minHeight: 40,
+    backgroundColor: BACKGROUND_COLOR,
   },
   leftSection: {
     flexDirection: 'row',
@@ -480,55 +502,59 @@ const styles = StyleSheet.create({
     alignItems: 'flex-end',
   },
   navButton: {
-    padding: 8, // Aumentar área táctil
+    padding: 8,
   },
   profileButton: {
-    padding: 8, // Aumentar área táctil
+    padding: 8,
   },
   dragIndicator: {
-    position: 'absolute',
-    bottom: 8,
-    alignSelf: 'center',
     width: 70,
     height: 4,
     borderRadius: 4,
-    backgroundColor: 'rgba(255, 255, 255, 0.5)', // Más visible
-    zIndex: 1001,
+    backgroundColor: 'rgba(255, 255, 255, 0.5)',
+  },
+  dragIndicatorExpanded: {
+    width: 90,
+    height: 5,
+    backgroundColor: 'rgba(255, 255, 255, 0.7)',
+  },
+  dragIndicatorCollapsed: {
+    width: 70,
+    height: 4,
+    backgroundColor: 'rgba(255, 255, 255, 0.5)',
   },
   expandTouchArea: {
-    position: 'absolute',
-    bottom: -20,
-    left: 0,
-    right: 0,
-    height: 40,
-    alignItems: 'center',
-    justifyContent: 'center',
-    zIndex: 1001,
+    display: 'none',
   },
   financialInfoContainer: {
     alignItems: 'center',
     justifyContent: 'center',
-    marginTop: 20, // Más espacio arriba
-    marginBottom: 20, // Más espacio abajo
-    overflow: 'visible', // Cambiar a visible para evitar recortes
+    flex: 1,
+    marginTop: 15,
+    marginBottom: 0,
+    overflow: 'visible',
+    paddingBottom: 0,
+    backgroundColor: BACKGROUND_COLOR,
   },
   titleText: {
     color: COLORS.white,
     fontSize: 16,
     opacity: 0.8,
-    marginBottom: 10, // Aumentar espacio
+    marginTop: 15,
   },
   amountContainer: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    marginVertical: 10, // Aumentar espacio
+    marginVertical: 5,
+    marginTop: 12,
   },
   amountText: {
     color: COLORS.white,
     fontSize: 42,
     fontWeight: 'bold',
-    includeFontPadding: false, // Evitar recortes en el texto
+    includeFontPadding: false,
+    letterSpacing: -0.5,
   },
   currencyText: {
     color: COLORS.white,
@@ -536,14 +562,33 @@ const styles = StyleSheet.create({
     opacity: 0.9,
     alignSelf: 'flex-end',
     marginBottom: 5,
-    includeFontPadding: false, // Evitar recortes en el texto
+    includeFontPadding: false,
   },
   profitLabel: {
     color: COLORS.white,
-    fontSize: 18,
+    fontSize: 16,
     opacity: 0.8,
-    marginTop: 10, // Aumentar espacio
-    includeFontPadding: false, // Evitar recortes en el texto
+    marginBottom: 5,
+    includeFontPadding: false,
+  },
+  internalDragArea: {
+    width: '100%',
+    height: 40,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 5,
+    marginTop: 5,
+  },
+  fullTouchContainer: {
+    flex: 1,
+    width: '100%',
+    height: '100%',
+  },
+  dragIndicatorContainer: {
+    width: '100%',
+    alignItems: 'center',
+    marginBottom: 15,
+    marginTop: 10,
   },
 });
 
