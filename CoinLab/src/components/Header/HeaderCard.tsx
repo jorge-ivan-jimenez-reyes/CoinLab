@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ImageBackground, Dimensions, Animated, Platform, PanResponder, StatusBar, SafeAreaView } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ImageBackground, Dimensions, Animated, Platform, PanResponder, StatusBar, SafeAreaView, ScrollView } from 'react-native';
 import { Ionicons } from 'react-native-vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -349,16 +349,6 @@ const HeaderCard: React.FC<HeaderCardProps> = ({
                   
                   <Text style={styles.titleText}>{title}</Text>
                 </Animated.View>
-                
-                <View style={[
-                  styles.dragIndicatorContainer,
-                  expanded ? styles.expandedIndicatorContainer : styles.collapsedIndicatorContainer
-                ]}>
-                  <View style={[
-                    styles.dragIndicator,
-                    expanded ? styles.dragIndicatorExpanded : styles.dragIndicatorCollapsed
-                  ]} />
-                </View>
               </View>
             </View>
           </AnimatedImageBackground>
@@ -418,20 +408,21 @@ const HeaderCard: React.FC<HeaderCardProps> = ({
                     <Text style={styles.titleText}>{title}</Text>
                   </View>
                 )}
-                
-                <View style={[
-                  styles.dragIndicatorContainer,
-                  expanded ? styles.expandedIndicatorContainer : styles.collapsedIndicatorContainer
-                ]}>
-                  <View style={[
-                    styles.dragIndicator,
-                    expanded ? styles.dragIndicatorExpanded : styles.dragIndicatorCollapsed
-                  ]} />
-                </View>
               </View>
             </View>
           </AnimatedLinearGradient>
         )}
+        
+        {/* Barra de expansión siempre visible */}
+        <View style={[
+          styles.dragIndicatorContainer,
+          expanded ? styles.expandedIndicatorContainer : styles.collapsedIndicatorContainer
+        ]}>
+          <View style={[
+            styles.dragIndicator,
+            expanded ? styles.dragIndicatorExpanded : styles.dragIndicatorCollapsed
+          ]} />
+        </View>
       </TouchableOpacity>
     </Animated.View>
   );
@@ -503,14 +494,17 @@ const styles = StyleSheet.create({
   dragIndicatorContainer: {
     width: '100%',
     alignItems: 'center',
+    position: 'absolute',
+    bottom: 8,
+    left: 0,
+    right: 0,
+    zIndex: 10,
   },
   expandedIndicatorContainer: {
-    marginBottom: 15,
-    marginTop: 10,
+    bottom: 8,
   },
   collapsedIndicatorContainer: {
-    marginBottom: 8,
-    marginTop: 5,
+    bottom: 8,
   },
   dragIndicator: {
     width: 70,
