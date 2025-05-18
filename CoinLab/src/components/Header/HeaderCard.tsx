@@ -16,16 +16,15 @@ const BACKGROUND_COLOR = '#171717';
 const IS_IOS = Platform.OS === 'ios';
 const NOTCH_SPACE = IS_IOS ? 44 : StatusBar.currentHeight || 0; 
 
-// Ajustar alturas basadas en el tamaño de la pantalla
-const COLLAPSED_HEIGHT = Math.min(height * 0.10, 80) + NOTCH_SPACE; // Altura reducida cuando está contraído
-const EXPANDED_HEIGHT = Math.min(height * 0.45, 320) + NOTCH_SPACE; // Altura aumentada aún más
-const DRAG_THRESHOLD = 25; 
+// Ajustar alturas basadas en el tamaño de la pantalla - Más compactas
+const COLLAPSED_HEIGHT = Math.min(height * 0.08, 70) + NOTCH_SPACE; // Más pequeño cuando contraído
+const EXPANDED_HEIGHT = height * 0.38 + NOTCH_SPACE; // Más responsivo al tamaño de la pantalla
+const DRAG_THRESHOLD = 20; 
 
-// Radio de las esquinas redondeadas
-const MIN_BORDER_RADIUS = 25;
-const MAX_BORDER_RADIUS = 40;
+// Valor fijo para el border radius
+const BORDER_RADIUS = 35; // Valor intermedio más equilibrado
 
-// Configuración de animación para una experiencia fluida - Todo sin native driver
+// Configuración de animación para una experiencia fluida
 const SPRING_CONFIG = {
   friction: 8,     
   tension: 40,     
@@ -153,7 +152,7 @@ const HeaderCard: React.FC<HeaderCardProps> = ({
       }
     }
 
-    // Iniciar expandido por defecto para mostrar toda la información
+    // Comenzar expandido para mostrar la información
     setExpanded(true);
     
     // Reiniciar todos los valores animados para evitar conflictos
@@ -169,8 +168,8 @@ const HeaderCard: React.FC<HeaderCardProps> = ({
     // Actualizar alturas si cambian las dimensiones
     const handleDimensionsChange = () => {
       const { height: newHeight } = Dimensions.get('window');
-      const newCollapsed = Math.min(newHeight * 0.10, 80) + NOTCH_SPACE;
-      const newExpanded = Math.min(newHeight * 0.35, 250) + NOTCH_SPACE;
+      const newCollapsed = Math.min(newHeight * 0.08, 70) + NOTCH_SPACE;
+      const newExpanded = newHeight * 0.38 + NOTCH_SPACE;
       
       const targetHeight = expanded ? newExpanded : newCollapsed;
       heightAnim.setValue(targetHeight);
@@ -202,18 +201,21 @@ const HeaderCard: React.FC<HeaderCardProps> = ({
     const targetHeight = expanded ? EXPANDED_HEIGHT : COLLAPSED_HEIGHT;
     notifyHeightChange(targetHeight);
     
-    // Animar la altura
+    // Animar la altura con configuración adaptada
     Animated.spring(heightAnim, {
       toValue: targetHeight,
-      ...SPRING_CONFIG
+      friction: expanded ? 8 : 10, // Más suave al contraer
+      tension: expanded ? 50 : 40, // Más rápido al expandir
+      useNativeDriver: false
     }).start(() => {
       isAnimating.current = false;
     });
     
-    // Animar la opacidad de la información - también sin native driver
+    // Animar la opacidad de la información
     Animated.timing(infoOpacity, {
       toValue: expanded ? 1 : 0,
-      ...TIMING_CONFIG
+      duration: 200,
+      useNativeDriver: false
     }).start();
   }, [expanded]);
 
@@ -261,9 +263,6 @@ const HeaderCard: React.FC<HeaderCardProps> = ({
     })
   );
   
-  // Valor fijo para el border radius en lugar de animado
-  const BORDER_RADIUS = 40; // Aumentamos el radio para que sea más notorio
-
   // Componentes Animados
   const AnimatedImageBackground = Animated.createAnimatedComponent(ImageBackground);
   const AnimatedLinearGradient = Animated.createAnimatedComponent(LinearGradient);
@@ -308,7 +307,10 @@ const HeaderCard: React.FC<HeaderCardProps> = ({
           >
             <View style={styles.contentWrapper}>
               <View style={styles.innerContent}>
-                <View style={styles.topSection}>
+                <View style={[
+                  styles.topSection,
+                  expanded ? styles.expandedTopSection : styles.collapsedTopSection
+                ]}>
                   <View style={styles.leftSection}>
                     {showBackButton && (
                       <TouchableOpacity style={styles.navButton} onPress={handleBackPress}>
@@ -335,13 +337,7 @@ const HeaderCard: React.FC<HeaderCardProps> = ({
                 <Animated.View 
                   style={[
                     styles.financialInfoContainer,
-                    { 
-                      opacity: infoOpacity, 
-                      maxHeight: infoOpacity.interpolate({
-                        inputRange: [0, 1],
-                        outputRange: [0, 350]
-                      }) 
-                    }
+                    expanded ? styles.expandedFinancialContainer : styles.collapsedFinancialContainer
                   ]}
                 >
                   <Text style={styles.profitLabel}>{profit}</Text>
@@ -354,8 +350,10 @@ const HeaderCard: React.FC<HeaderCardProps> = ({
                   <Text style={styles.titleText}>{title}</Text>
                 </Animated.View>
                 
-                {/* Barra indicadora integrada al final del contenido */}
-                <View style={styles.dragIndicatorContainer}>
+                <View style={[
+                  styles.dragIndicatorContainer,
+                  expanded ? styles.expandedIndicatorContainer : styles.collapsedIndicatorContainer
+                ]}>
                   <View style={[
                     styles.dragIndicator,
                     expanded ? styles.dragIndicatorExpanded : styles.dragIndicatorCollapsed
@@ -380,7 +378,10 @@ const HeaderCard: React.FC<HeaderCardProps> = ({
           >
             <View style={styles.contentWrapper}>
               <View style={styles.innerContent}>
-                <View style={styles.topSection}>
+                <View style={[
+                  styles.topSection,
+                  expanded ? styles.expandedTopSection : styles.collapsedTopSection
+                ]}>
                   <View style={styles.leftSection}>
                     {showBackButton && (
                       <TouchableOpacity style={styles.navButton} onPress={handleBackPress}>
@@ -404,30 +405,24 @@ const HeaderCard: React.FC<HeaderCardProps> = ({
                   </View>
                 </View>
                 
-                <Animated.View 
-                  style={[
-                    styles.financialInfoContainer,
-                    { 
-                      opacity: infoOpacity, 
-                      maxHeight: infoOpacity.interpolate({
-                        inputRange: [0, 1],
-                        outputRange: [0, 350]
-                      }) 
-                    }
-                  ]}
-                >
-                  <Text style={styles.profitLabel}>{profit}</Text>
-                  
-                  <View style={styles.amountContainer}>
-                    <Text style={styles.amountText}>{amount}</Text>
-                    <Text style={styles.currencyText}> {amountLabel}</Text>
+                {/* Contenido financiero visible solo cuando está expandido */}
+                {expanded && (
+                  <View style={styles.financialInfoContainer}>
+                    <Text style={styles.profitLabel}>{profit}</Text>
+                    
+                    <View style={styles.amountContainer}>
+                      <Text style={styles.amountText}>{amount}</Text>
+                      <Text style={styles.currencyText}> {amountLabel}</Text>
+                    </View>
+                    
+                    <Text style={styles.titleText}>{title}</Text>
                   </View>
-                  
-                  <Text style={styles.titleText}>{title}</Text>
-                </Animated.View>
+                )}
                 
-                {/* Barra indicadora integrada al final del contenido */}
-                <View style={styles.dragIndicatorContainer}>
+                <View style={[
+                  styles.dragIndicatorContainer,
+                  expanded ? styles.expandedIndicatorContainer : styles.collapsedIndicatorContainer
+                ]}>
                   <View style={[
                     styles.dragIndicator,
                     expanded ? styles.dragIndicatorExpanded : styles.dragIndicatorCollapsed
@@ -448,7 +443,7 @@ const styles = StyleSheet.create({
     zIndex: 999,
     overflow: 'visible',
     position: 'absolute',
-    top: -NOTCH_SPACE, // Posición negativa para cubrir el notch
+    top: -NOTCH_SPACE,
     left: 0,
     right: 0,
     marginTop: 0,
@@ -461,36 +456,29 @@ const styles = StyleSheet.create({
   contentWrapper: {
     flex: 1,
     width: '100%',
-    paddingTop: NOTCH_SPACE + 5,
+    paddingTop: NOTCH_SPACE + 2, // Reducir padding
     backgroundColor: BACKGROUND_COLOR,
   },
   innerContent: {
     flex: 1,
     padding: 16,
-    paddingTop: IS_IOS ? 20 : 16,
-    paddingBottom: 30, // Añadir padding en la parte inferior
-    backgroundColor: BACKGROUND_COLOR,
-  },
-  cardContainer: {
-    width: '100%',
-    backgroundColor: BACKGROUND_COLOR,
-    borderRadius: 0,
-    borderTopLeftRadius: 0,
-    borderTopRightRadius: 0,
-    overflow: 'hidden',
-  },
-  backgroundImage: {
-    width: '100%',
-    height: '100%',
+    paddingTop: IS_IOS ? 12 : 10, // Menos espacio superior
+    paddingBottom: 0, // Sin padding inferior
     backgroundColor: BACKGROUND_COLOR,
   },
   topSection: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
+    backgroundColor: BACKGROUND_COLOR,
+  },
+  expandedTopSection: {
     marginBottom: 16,
     minHeight: 40,
-    backgroundColor: BACKGROUND_COLOR,
+  },
+  collapsedTopSection: {
+    marginBottom: 0,
+    minHeight: 32,
   },
   leftSection: {
     flexDirection: 'row',
@@ -506,6 +494,23 @@ const styles = StyleSheet.create({
   },
   profileButton: {
     padding: 8,
+  },
+  fullTouchContainer: {
+    flex: 1,
+    width: '100%',
+    height: '100%',
+  },
+  dragIndicatorContainer: {
+    width: '100%',
+    alignItems: 'center',
+  },
+  expandedIndicatorContainer: {
+    marginBottom: 15,
+    marginTop: 10,
+  },
+  collapsedIndicatorContainer: {
+    marginBottom: 8,
+    marginTop: 5,
   },
   dragIndicator: {
     width: 70,
@@ -529,25 +534,30 @@ const styles = StyleSheet.create({
   financialInfoContainer: {
     alignItems: 'center',
     justifyContent: 'center',
-    flex: 1,
-    marginTop: 15,
-    marginBottom: 0,
-    overflow: 'visible',
-    paddingBottom: 0,
+    marginTop: 20,
+    marginBottom: 15,
     backgroundColor: BACKGROUND_COLOR,
+    minHeight: 150,
   },
-  titleText: {
-    color: COLORS.white,
-    fontSize: 16,
-    opacity: 0.8,
-    marginTop: 15,
+  cardContainer: {
+    width: '100%',
+    backgroundColor: BACKGROUND_COLOR,
+    borderRadius: 0,
+    borderTopLeftRadius: 0,
+    borderTopRightRadius: 0,
+    overflow: 'hidden',
+  },
+  backgroundImage: {
+    width: '100%',
+    height: '100%',
+    backgroundColor: BACKGROUND_COLOR,
   },
   amountContainer: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    marginVertical: 5,
-    marginTop: 12,
+    marginVertical: 10,
+    marginTop: 15,
   },
   amountText: {
     color: COLORS.white,
@@ -555,6 +565,7 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     includeFontPadding: false,
     letterSpacing: -0.5,
+    textAlign: 'center',
   },
   currencyText: {
     color: COLORS.white,
@@ -568,28 +579,23 @@ const styles = StyleSheet.create({
     color: COLORS.white,
     fontSize: 16,
     opacity: 0.8,
-    marginBottom: 5,
+    marginBottom: 8,
     includeFontPadding: false,
   },
-  internalDragArea: {
-    width: '100%',
-    height: 40,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 5,
-    marginTop: 5,
+  titleText: {
+    color: COLORS.white,
+    fontSize: 16,
+    opacity: 0.8,
+    marginTop: 15,
   },
-  fullTouchContainer: {
-    flex: 1,
-    width: '100%',
-    height: '100%',
+  collapsedFinancialContainer: {
+    opacity: 0,
+    maxHeight: 0,
   },
-  dragIndicatorContainer: {
-    width: '100%',
-    alignItems: 'center',
-    marginBottom: 15,
-    marginTop: 10,
+  expandedFinancialContainer: {
+    opacity: 1,
+    maxHeight: 200,
   },
-});
-
+  });
+  
 export default HeaderCard; 
