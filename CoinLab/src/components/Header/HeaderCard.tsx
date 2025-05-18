@@ -17,7 +17,7 @@ const NOTCH_SPACE = IS_IOS ? 44 : StatusBar.currentHeight || 0;
 
 // Ajustar alturas basadas en el tamaño de la pantalla
 const COLLAPSED_HEIGHT = Math.min(height * 0.10, 80) + NOTCH_SPACE; // Altura reducida cuando está contraído
-const EXPANDED_HEIGHT = Math.min(height * 0.25, 190) + NOTCH_SPACE; // Altura aumentada cuando está expandido
+const EXPANDED_HEIGHT = Math.min(height * 0.35, 250) + NOTCH_SPACE; // Altura aumentada cuando está expandido
 const DRAG_THRESHOLD = 25; 
 
 // Configuración de animación para una experiencia fluida
@@ -152,7 +152,7 @@ const HeaderCard: React.FC<HeaderCardProps> = ({
     const handleDimensionsChange = () => {
       const { height: newHeight } = Dimensions.get('window');
       const newCollapsed = Math.min(newHeight * 0.10, 80) + NOTCH_SPACE;
-      const newExpanded = Math.min(newHeight * 0.25, 190) + NOTCH_SPACE;
+      const newExpanded = Math.min(newHeight * 0.35, 250) + NOTCH_SPACE;
       
       const targetHeight = expanded ? newExpanded : newCollapsed;
       heightAnim.setValue(targetHeight);
@@ -383,7 +383,6 @@ const HeaderCard: React.FC<HeaderCardProps> = ({
 const styles = StyleSheet.create({
   absoluteContainer: {
     width: '100%',
-    backgroundColor: '#171717',
     zIndex: 10,
     overflow: 'visible',
     position: 'absolute',
@@ -485,21 +484,21 @@ const styles = StyleSheet.create({
   },
   amountText: {
     color: COLORS.white,
-    fontSize: 36, // Tamaño aumentado
+    fontSize: 42, // Tamaño aumentado
     fontWeight: 'bold',
   },
   currencyText: {
     color: COLORS.white,
-    fontSize: 18, // Tamaño aumentado
+    fontSize: 20, // Tamaño aumentado
     opacity: 0.9,
     alignSelf: 'flex-end',
     marginBottom: 5,
   },
   profitLabel: {
     color: COLORS.white,
-    fontSize: 16, // Tamaño aumentado
+    fontSize: 18, // Tamaño aumentado
     opacity: 0.8,
-    marginTop: 4,
+    marginTop: 8,
   },
 });
 
