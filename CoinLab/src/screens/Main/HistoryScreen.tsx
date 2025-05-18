@@ -1,5 +1,5 @@
-import React from 'react';
-import { StyleSheet, View, Text, SafeAreaView, FlatList, Dimensions } from 'react-native';
+import React, { useState } from 'react';
+import { StyleSheet, View, Text, SafeAreaView, FlatList, Dimensions, Platform } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { Ionicons } from 'react-native-vector-icons';
 import COLORS from '../../theme/colors';
@@ -8,8 +8,13 @@ import { IMAGES } from '../../assets/index';
 
 // Obtener dimensiones para hacer el header responsivo
 const { height } = Dimensions.get('window');
-// Calcular la altura máxima que necesitamos para el contenedor
-const HEADER_CONTAINER_HEIGHT = Math.min(height * 0.08, 70); // Reducido para eliminar el espacio en blanco
+// Calcular la altura para los estados contraído y expandido
+const COLLAPSED_HEIGHT = Math.min(height * 0.09, 75);
+const EXPANDED_HEIGHT = Math.min(height * 0.20, 160);
+// Margen superior para evitar la barra de estado
+const STATUS_BAR_HEIGHT = Platform.OS === 'ios' ? 44 : 24;
+// Padding adicional para asegurar que los elementos no se corten
+const SAFE_PADDING = 5;
 
 interface Transaction {
   id: string;
@@ -70,6 +75,23 @@ const transactionData: Transaction[] = [
 ];
 
 const HistoryScreen = () => {
+  // Estado para el espacio reservado para el header
+  const [headerSpacing, setHeaderSpacing] = useState(COLLAPSED_HEIGHT);
+  // Estado para seguir si el header está expandido
+  const [isHeaderExpanded, setIsHeaderExpanded] = useState(false);
+
+  // Manejar cambios de altura
+  const handleHeaderHeightChange = (height: number) => {
+    setHeaderSpacing(height);
+  };
+
+  // Manejar cambios de estado expandido/contraído
+  const handleHeaderExpand = (expanded: boolean) => {
+    setIsHeaderExpanded(expanded);
+    // También podemos actualizar el espacio inmediatamente para evitar retrasos
+    setHeaderSpacing(expanded ? EXPANDED_HEIGHT : COLLAPSED_HEIGHT);
+  };
+
   const getIconName = (type: Transaction['type']) => {
     switch (type) {
       case 'buy': return 'arrow-down-outline';
@@ -127,16 +149,10 @@ const HistoryScreen = () => {
 
   return (
     <SafeAreaView style={styles.container}>
-      <StatusBar style="dark" />
+      <StatusBar style="light" translucent backgroundColor="transparent" />
       
-      <View style={styles.headerContainer}>
-        <HeaderCard 
-          title="Historial" 
-          backgroundImage={IMAGES.CARD_BACKGROUND}
-        />
-      </View>
-      
-      <View style={styles.content}>
+      {/* Vista principal con padding superior para reservar espacio para el header */}
+      <View style={[styles.content, { paddingTop: headerSpacing + STATUS_BAR_HEIGHT + SAFE_PADDING }]}>
         <View style={styles.filterContainer}>
           <Text style={styles.filterTitle}>Filtros:</Text>
           <View style={styles.filterPills}>
@@ -160,6 +176,16 @@ const HistoryScreen = () => {
           showsVerticalScrollIndicator={false}
         />
       </View>
+      
+      {/* Header que se coloca encima usando position:absolute */}
+      <View style={styles.headerContainer}>
+        <HeaderCard 
+          title="Historial" 
+          backgroundImage={IMAGES.CARD_BACKGROUND}
+          onHeightChange={handleHeaderHeightChange}
+          onExpand={handleHeaderExpand}
+        />
+      </View>
     </SafeAreaView>
   );
 };
@@ -170,13 +196,15 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.background,
   },
   headerContainer: {
-    height: HEADER_CONTAINER_HEIGHT,
+    position: 'absolute',
+    top: STATUS_BAR_HEIGHT, // Usar la constante para el margen superior
+    left: 0,
+    right: 0,
     zIndex: 10,
   },
   content: {
     flex: 1,
     paddingHorizontal: 15,
-    marginTop: HEADER_CONTAINER_HEIGHT - 10, // Reducir el espacio para acercar el contenido al header
   },
   filterContainer: {
     marginBottom: 20,

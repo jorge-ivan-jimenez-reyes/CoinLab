@@ -12,8 +12,8 @@ const { width, height } = Dimensions.get('window');
 const GRADIENT_COLORS = ['#26318A', '#344190', '#3F4B9F'] as const;
 
 // Ajustar alturas de manera responsiva basada en el tamaño de la pantalla
-const COLLAPSED_HEIGHT = Math.min(height * 0.08, 70); // Reducido significativamente
-const EXPANDED_HEIGHT = Math.min(height * 0.20, 160); // También reducido
+const COLLAPSED_HEIGHT = Math.min(height * 0.09, 75); // Ligeramente aumentado para asegurar visibilidad
+const EXPANDED_HEIGHT = Math.min(height * 0.20, 160);
 const DRAG_THRESHOLD = 50; // Umbral para determinar cuando completar el arrastre
 
 interface HeaderCardProps {
@@ -21,6 +21,8 @@ interface HeaderCardProps {
   showBackButton?: boolean;
   onBackPress?: () => void;
   backgroundImage?: any; // Opcional: imagen de fondo
+  onHeightChange?: (height: number) => void; // Callback para informar cambios de altura
+  onExpand?: (isExpanded: boolean) => void; // Nuevo callback para informar del estado expandido
 }
 
 const HeaderCard: React.FC<HeaderCardProps> = ({
@@ -28,6 +30,8 @@ const HeaderCard: React.FC<HeaderCardProps> = ({
   showBackButton = true,
   onBackPress,
   backgroundImage,
+  onHeightChange,
+  onExpand,
 }) => {
   const navigation = useNavigation();
   const [expanded, setExpanded] = useState(false);
@@ -36,6 +40,15 @@ const HeaderCard: React.FC<HeaderCardProps> = ({
   
   // Valor para seguir el arrastre manual
   const dragY = useRef(new Animated.Value(0)).current;
+  
+  // Notificar altura actual al padre - función auxiliar
+  const notifyHeightChange = (height: number) => {
+    if (onHeightChange) {
+      // Asegurarse de que el valor esté dentro de los límites
+      const boundedHeight = Math.max(COLLAPSED_HEIGHT, Math.min(EXPANDED_HEIGHT, height));
+      onHeightChange(boundedHeight);
+    }
+  };
   
   // Configurar el PanResponder para manejar gestos de arrastre
   const panResponder = useRef(
@@ -48,10 +61,18 @@ const HeaderCard: React.FC<HeaderCardProps> = ({
         // Cuando inicia el gesto, capturar valor actual
         dragY.setValue(0);
       },
-      onPanResponderMove: Animated.event(
-        [null, { dy: dragY }],
-        { useNativeDriver: false }
-      ),
+      onPanResponderMove: (_, gestureState) => {
+        // Actualizar el valor de arrastre
+        dragY.setValue(gestureState.dy);
+        
+        // Calcular la altura actual durante el arrastre
+        const baseHeight = expanded ? EXPANDED_HEIGHT : COLLAPSED_HEIGHT;
+        const dragAmount = gestureState.dy;
+        const newHeight = baseHeight + dragAmount;
+        
+        // Notificar al componente padre sobre el cambio de altura durante el arrastre
+        notifyHeightChange(newHeight);
+      },
       onPanResponderRelease: (_, gestureState) => {
         // Al soltar, determinar si expandir o colapsar
         if (!expanded && gestureState.dy < -DRAG_THRESHOLD) {
@@ -70,17 +91,24 @@ const HeaderCard: React.FC<HeaderCardProps> = ({
 
   // Inicializar el componente
   useEffect(() => {
+    // Inicializar valores
     heightAnim.setValue(COLLAPSED_HEIGHT);
     arrowRotation.setValue(0);
+    
+    // Notificar la altura inicial
+    notifyHeightChange(COLLAPSED_HEIGHT);
     
     // Actualizar alturas si cambian las dimensiones de la pantalla
     const handleDimensionsChange = () => {
       const { height: newHeight } = Dimensions.get('window');
-      const newCollapsed = Math.min(newHeight * 0.13, 100);
-      const newExpanded = Math.min(newHeight * 0.28, 220);
+      const newCollapsed = Math.min(newHeight * 0.08, 70);
+      const newExpanded = Math.min(newHeight * 0.20, 160);
       
       // Actualizar con los nuevos valores
       heightAnim.setValue(expanded ? newExpanded : newCollapsed);
+      
+      // Notificar al componente padre
+      notifyHeightChange(expanded ? newExpanded : newCollapsed);
     };
     
     // Escuchar cambios de dimensión (como rotación de pantalla)
@@ -92,29 +120,62 @@ const HeaderCard: React.FC<HeaderCardProps> = ({
     };
   }, []);
 
+  // Escuchar cambios en el estado expandido
+  useEffect(() => {
+    // Cuando cambia el estado expandido, actualizar altura y notificar
+    if (expanded) {
+      heightAnim.setValue(EXPANDED_HEIGHT);
+      notifyHeightChange(EXPANDED_HEIGHT);
+    } else {
+      heightAnim.setValue(COLLAPSED_HEIGHT);
+      notifyHeightChange(COLLAPSED_HEIGHT);
+    }
+    
+    // Notificar al componente padre sobre el cambio de estado
+    if (onExpand) {
+      onExpand(expanded);
+    }
+  }, [expanded]);
+
+  // Escuchar cambios en la altura animada (para gestos y animaciones en curso)
+  useEffect(() => {
+    const listener = heightAnim.addListener(({ value }) => {
+      notifyHeightChange(value);
+    });
+
+    return () => {
+      heightAnim.removeListener(listener);
+    };
+  }, []);
+
   const resetToCurrentState = () => {
     // Regresar a la altura actual según el estado
     Animated.spring(heightAnim, {
       toValue: expanded ? EXPANDED_HEIGHT : COLLAPSED_HEIGHT,
       friction: 6,
       useNativeDriver: false,
-    }).start();
+    }).start(() => {
+      // Notificar la altura final después de la animación
+      notifyHeightChange(expanded ? EXPANDED_HEIGHT : COLLAPSED_HEIGHT);
+    });
   };
 
   const toggleExpanded = (newExpanded = !expanded) => {
+    console.log("toggleExpanded called with value:", newExpanded);
+    
+    // Cambiar el estado
     setExpanded(newExpanded);
     
-    console.log(`Toggling expanded: ${newExpanded ? 'expanding' : 'collapsing'}`);
+    // Cambiar la altura 
+    const targetHeight = newExpanded ? EXPANDED_HEIGHT : COLLAPSED_HEIGHT;
     
-    // Animar la altura con spring para efecto más natural
+    // Animar con spring para efecto natural
     Animated.spring(heightAnim, {
-      toValue: newExpanded ? EXPANDED_HEIGHT : COLLAPSED_HEIGHT,
-      friction: 6, // Menos fricción para movimiento más suave
-      tension: 40, // Menos tensión para rebote más natural
-      useNativeDriver: false,
-    }).start(() => {
-      console.log(`Animation completed. Height: ${newExpanded ? EXPANDED_HEIGHT : COLLAPSED_HEIGHT}`);
-    });
+      toValue: targetHeight,
+      friction: 6,
+      tension: 40,
+      useNativeDriver: false
+    }).start();
     
     // Animar la rotación de la flecha
     Animated.timing(arrowRotation, {
@@ -162,12 +223,12 @@ const HeaderCard: React.FC<HeaderCardProps> = ({
   );
 
   const renderCardContent = () => (
-    <View style={styles.contentContainer} {...panResponder.panHandlers}>
+    <View style={styles.contentContainer}>
       <View style={styles.topSection}>
         <View style={styles.leftSection}>
           {showBackButton && (
             <TouchableOpacity style={styles.iconButton} onPress={handleBackPress}>
-              <Ionicons name="arrow-back" size={28} color={COLORS.white} />
+              <Ionicons name="arrow-back" size={24} color={COLORS.white} />
             </TouchableOpacity>
           )}
           
@@ -178,7 +239,7 @@ const HeaderCard: React.FC<HeaderCardProps> = ({
         
         <View style={styles.rightSection}>
           <TouchableOpacity style={styles.profileButton} onPress={handleProfilePress}>
-            <Ionicons name="person-circle-outline" size={36} color={COLORS.white} />
+            <Ionicons name="person-circle-outline" size={32} color={COLORS.white} />
           </TouchableOpacity>
         </View>
       </View>
@@ -219,7 +280,7 @@ const HeaderCard: React.FC<HeaderCardProps> = ({
       <View style={styles.expandButtonContainer}>
         <TouchableOpacity 
           style={styles.expandButton} 
-          onPress={() => toggleExpanded()}
+          onPress={handleToggleExpand}
           activeOpacity={0.7}
         >
           <Animated.View style={arrowRotateStyle}>
@@ -238,11 +299,20 @@ const HeaderCard: React.FC<HeaderCardProps> = ({
   const AnimatedImageBackground = Animated.createAnimatedComponent(ImageBackground);
   const AnimatedLinearGradient = Animated.createAnimatedComponent(LinearGradient);
 
+  // Función auxiliar para expandir/contraer
+  const handleToggleExpand = () => {
+    console.log("Expand button pressed, toggling state");
+    toggleExpanded();
+  };
+
   return (
-    <Animated.View style={[
-      styles.container,
-      { height: dynamicHeight } // Usar altura dinámica que responde al arrastre
-    ]}>
+    <Animated.View 
+      style={[
+        styles.container,
+        { height: dynamicHeight } // Usar altura dinámica que responde al arrastre
+      ]}
+      {...panResponder.panHandlers} // Mover el panResponder aquí para que funcione en toda la tarjeta
+    >
       {backgroundImage ? (
         <AnimatedImageBackground
           source={backgroundImage}
@@ -269,8 +339,14 @@ const HeaderCard: React.FC<HeaderCardProps> = ({
         </AnimatedLinearGradient>
       )}
       
-      {/* Línea de indicación de arrastre */}
-      <View style={styles.dragIndicator} />
+      {/* Botón de expandir visible en toda la tarjeta */}
+      <TouchableOpacity 
+        style={styles.expandTouchArea}
+        onPress={handleToggleExpand}
+        activeOpacity={0.9}
+      >
+        <View style={styles.dragIndicator} />
+      </TouchableOpacity>
     </Animated.View>
   );
 };
@@ -283,12 +359,12 @@ const styles = StyleSheet.create({
     zIndex: 10,
     overflow: 'visible',
     position: 'absolute',
-    top: 0,
+    top: 0, // Aquí ya no necesitamos margen, lo manejaremos en cada pantalla
     left: 0,
     right: 0,
   },
   cardContainer: {
-    borderRadius: 20,
+    borderRadius: 16, // Reducimos ligeramente el radio para un aspecto más limpio
     overflow: 'hidden',
     elevation: 8,
     shadowColor: '#000',
@@ -299,11 +375,11 @@ const styles = StyleSheet.create({
   },
   contentContainer: {
     flex: 1,
-    padding: 18,
+    padding: 12,
     position: 'relative',
   },
   backgroundImage: {
-    borderRadius: 20,
+    borderRadius: 16,
     width: '100%',
     height: '100%',
   },
@@ -311,7 +387,8 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 10,
+    marginBottom: 6,
+    minHeight: 40,
   },
   expandButtonContainer: {
     position: 'absolute',
@@ -337,29 +414,32 @@ const styles = StyleSheet.create({
     justifyContent: 'space-around',
     alignItems: 'center',
     paddingHorizontal: 10,
-    marginTop: 20,
+    marginTop: 12,
     overflow: 'hidden',
   },
   leftSection: {
     flexDirection: 'row',
     alignItems: 'center',
+    flex: 1,
   },
   rightSection: {
     alignItems: 'flex-end',
+    paddingLeft: 8,
   },
   titleContainer: {
-    marginLeft: 10,
+    marginLeft: 8,
+    flex: 1,
   },
   title: {
     color: COLORS.white,
-    fontSize: 20,
+    fontSize: 18,
     fontWeight: 'bold',
   },
   iconButton: {
-    padding: 5,
+    padding: 4,
   },
   profileButton: {
-    padding: 5,
+    padding: 4,
   },
   actionButton: {
     alignItems: 'center',
@@ -380,6 +460,16 @@ const styles = StyleSheet.create({
     height: 4,
     borderRadius: 2,
     backgroundColor: 'rgba(255, 255, 255, 0.5)',
+    zIndex: 101,
+  },
+  expandTouchArea: {
+    position: 'absolute',
+    bottom: -20,
+    left: 0,
+    right: 0,
+    height: 40,
+    alignItems: 'center',
+    justifyContent: 'center',
     zIndex: 101,
   },
 });

@@ -1,5 +1,5 @@
-import React from 'react';
-import { StyleSheet, View, Text, SafeAreaView, ScrollView, Dimensions } from 'react-native';
+import React, { useState } from 'react';
+import { StyleSheet, View, Text, SafeAreaView, ScrollView, Dimensions, Platform } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import COLORS from '../../theme/colors';
 import { HeaderCard } from '../../components/Header';
@@ -7,25 +7,45 @@ import { IMAGES } from '../../assets/index';
 
 // Obtener dimensiones para hacer el header responsivo
 const { height } = Dimensions.get('window');
-// Calcular la altura máxima que necesitamos para el contenedor (más alto que EXPANDED_HEIGHT)
-const HEADER_CONTAINER_HEIGHT = Math.min(height * 0.08, 70); // Reducido para eliminar el espacio en blanco
+// Calcular la altura para los estados contraído y expandido
+const COLLAPSED_HEIGHT = Math.min(height * 0.09, 75);
+const EXPANDED_HEIGHT = Math.min(height * 0.20, 160);
+// Margen superior para evitar la barra de estado
+const STATUS_BAR_HEIGHT = Platform.OS === 'ios' ? 44 : 24;
+// Padding adicional para asegurar que los elementos no se corten
+const SAFE_PADDING = 5;
 
 const HomeScreen = () => {
+  // Estado para el espacio reservado para el header
+  const [headerSpacing, setHeaderSpacing] = useState(COLLAPSED_HEIGHT);
+  // Estado para seguir si el header está expandido
+  const [isHeaderExpanded, setIsHeaderExpanded] = useState(false);
+
+  // Manejar cambios de altura
+  const handleHeaderHeightChange = (height: number) => {
+    console.log(`Home - Header height changed to: ${height}`);
+    setHeaderSpacing(height);
+  };
+
+  // Manejar cambios de estado expandido/contraído
+  const handleHeaderExpand = (expanded: boolean) => {
+    console.log(`Home - Header expanded state: ${expanded}`);
+    setIsHeaderExpanded(expanded);
+    // También podemos actualizar el espacio inmediatamente para evitar retrasos
+    const newHeight = expanded ? EXPANDED_HEIGHT : COLLAPSED_HEIGHT;
+    console.log(`Home - Setting header spacing to: ${newHeight}`);
+    setHeaderSpacing(newHeight);
+  };
+
   return (
     <SafeAreaView style={styles.container}>
-      <StatusBar style="dark" />
+      <StatusBar style="light" translucent backgroundColor="transparent" />
       
-      <View style={styles.headerContainer}>
-        <HeaderCard 
-          title="Home" 
-          backgroundImage={IMAGES.CARD_BACKGROUND}
-        />
-      </View>
-      
+      {/* Vista con padding superior para reservar espacio para el header */}
       <ScrollView 
         style={styles.content} 
+        contentContainerStyle={[styles.contentContainer, { paddingTop: headerSpacing + STATUS_BAR_HEIGHT + SAFE_PADDING }]}
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={styles.contentContainer}
       >
         <View style={styles.card}>
           <Text style={styles.cardTitle}>Bienvenido a CoinLab</Text>
@@ -60,6 +80,16 @@ const HomeScreen = () => {
           </View>
         </View>
       </ScrollView>
+      
+      {/* Header que se coloca encima usando position:absolute */}
+      <View style={styles.headerContainer}>
+        <HeaderCard 
+          title="Home" 
+          backgroundImage={IMAGES.CARD_BACKGROUND}
+          onHeightChange={handleHeaderHeightChange}
+          onExpand={handleHeaderExpand}
+        />
+      </View>
     </SafeAreaView>
   );
 };
@@ -70,7 +100,10 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.background,
   },
   headerContainer: {
-    height: HEADER_CONTAINER_HEIGHT,
+    position: 'absolute',
+    top: STATUS_BAR_HEIGHT, // Usar la constante para el margen superior
+    left: 0,
+    right: 0,
     zIndex: 10,
   },
   content: {
@@ -78,7 +111,6 @@ const styles = StyleSheet.create({
   },
   contentContainer: {
     paddingHorizontal: 15,
-    paddingTop: HEADER_CONTAINER_HEIGHT - 10, // Reducir el espacio para acercar el contenido al header
     paddingBottom: 20,
   },
   card: {

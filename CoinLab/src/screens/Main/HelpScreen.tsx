@@ -1,5 +1,5 @@
-import React from 'react';
-import { StyleSheet, View, Text, SafeAreaView, ScrollView, TouchableOpacity, Dimensions } from 'react-native';
+import React, { useState } from 'react';
+import { StyleSheet, View, Text, SafeAreaView, ScrollView, TouchableOpacity, Dimensions, Platform } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { Ionicons } from 'react-native-vector-icons';
 import COLORS from '../../theme/colors';
@@ -8,8 +8,13 @@ import { IMAGES } from '../../assets/index';
 
 // Obtener dimensiones para hacer el header responsivo
 const { height } = Dimensions.get('window');
-// Calcular la altura máxima que necesitamos para el contenedor
-const HEADER_CONTAINER_HEIGHT = Math.min(height * 0.08, 70); // Reducido para eliminar el espacio en blanco
+// Calcular la altura para los estados contraído y expandido
+const COLLAPSED_HEIGHT = Math.min(height * 0.09, 75);
+const EXPANDED_HEIGHT = Math.min(height * 0.20, 160);
+// Margen superior para evitar la barra de estado
+const STATUS_BAR_HEIGHT = Platform.OS === 'ios' ? 44 : 24;
+// Padding adicional para asegurar que los elementos no se corten
+const SAFE_PADDING = 5;
 
 interface FAQItem {
   question: string;
@@ -36,6 +41,23 @@ const faqData: FAQItem[] = [
 ];
 
 const HelpScreen = () => {
+  // Estado para el espacio reservado para el header
+  const [headerSpacing, setHeaderSpacing] = useState(COLLAPSED_HEIGHT);
+  // Estado para seguir si el header está expandido
+  const [isHeaderExpanded, setIsHeaderExpanded] = useState(false);
+
+  // Manejar cambios de altura
+  const handleHeaderHeightChange = (height: number) => {
+    setHeaderSpacing(height);
+  };
+
+  // Manejar cambios de estado expandido/contraído
+  const handleHeaderExpand = (expanded: boolean) => {
+    setIsHeaderExpanded(expanded);
+    // También podemos actualizar el espacio inmediatamente para evitar retrasos
+    setHeaderSpacing(expanded ? EXPANDED_HEIGHT : COLLAPSED_HEIGHT);
+  };
+
   const renderFAQItem = (item: FAQItem, index: number) => (
     <View key={index} style={styles.faqItem}>
       <Text style={styles.question}>{item.question}</Text>
@@ -45,19 +67,13 @@ const HelpScreen = () => {
 
   return (
     <SafeAreaView style={styles.container}>
-      <StatusBar style="dark" />
+      <StatusBar style="light" translucent backgroundColor="transparent" />
       
-      <View style={styles.headerContainer}>
-        <HeaderCard 
-          title="Ayuda" 
-          backgroundImage={IMAGES.CARD_BACKGROUND}
-        />
-      </View>
-      
+      {/* Vista con ScrollView que tiene un padding superior para reservar espacio para el header */}
       <ScrollView 
         style={styles.content} 
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={styles.contentContainer}
+        contentContainerStyle={[styles.contentContainer, { paddingTop: headerSpacing + STATUS_BAR_HEIGHT + SAFE_PADDING }]}
       >
         <Text style={styles.sectionTitle}>Preguntas Frecuentes</Text>
         
@@ -84,6 +100,16 @@ const HelpScreen = () => {
           </TouchableOpacity>
         </View>
       </ScrollView>
+      
+      {/* Header que se coloca encima usando position:absolute */}
+      <View style={styles.headerContainer}>
+        <HeaderCard 
+          title="Ayuda" 
+          backgroundImage={IMAGES.CARD_BACKGROUND}
+          onHeightChange={handleHeaderHeightChange}
+          onExpand={handleHeaderExpand}
+        />
+      </View>
     </SafeAreaView>
   );
 };
@@ -94,7 +120,10 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.background,
   },
   headerContainer: {
-    height: HEADER_CONTAINER_HEIGHT,
+    position: 'absolute',
+    top: STATUS_BAR_HEIGHT, // Usar la constante para el margen superior
+    left: 0,
+    right: 0,
     zIndex: 10,
   },
   content: {
@@ -102,7 +131,6 @@ const styles = StyleSheet.create({
   },
   contentContainer: {
     paddingHorizontal: 15,
-    paddingTop: HEADER_CONTAINER_HEIGHT - 10, // Reducir el espacio para acercar el contenido al header
     paddingBottom: 20,
   },
   sectionTitle: {
