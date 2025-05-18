@@ -48,7 +48,7 @@ const HelpScreen = () => {
         showsVerticalScrollIndicator={false}
       >
         <View style={styles.contentContainer}>
-          <Text style={styles.sectionTitle}>Preguntas Frecuentes</Text>
+          <Text style={[styles.sectionTitle, { marginTop: 0 }]}>Preguntas Frecuentes</Text>
           
           <View style={styles.faqContainer}>
             {faqData.map(renderFAQItem)}
@@ -82,13 +82,23 @@ const styles = StyleSheet.create({
   scrollView: {
     flex: 1,
     width: '100%',
+    backgroundColor: COLORS.background,
+    borderWidth: 0,
+    borderTopWidth: 0,
   },
   scrollContent: {
     paddingBottom: 60,
+    borderWidth: 0,
+    borderTopWidth: 0,
+    paddingTop: 0,
   },
   contentContainer: {
     paddingHorizontal: 15,
     width: '100%',
+    borderWidth: 0,
+    borderTopWidth: 0,
+    paddingTop: 0,
+    marginTop: 0,
   },
   sectionTitle: {
     fontSize: 20,
@@ -97,10 +107,16 @@ const styles = StyleSheet.create({
     marginBottom: 15,
     marginTop: 10,
     width: '100%',
+    borderWidth: 0,
+    borderTopWidth: 0,
   },
   faqContainer: {
     marginBottom: 20,
     width: '100%',
+    borderWidth: 0,
+    borderTopWidth: 0,
+    paddingTop: 0,
+    marginTop: 0,
   },
   faqItem: {
     backgroundColor: COLORS.lightGray,

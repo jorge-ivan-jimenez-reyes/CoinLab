@@ -19,7 +19,7 @@ const HomeScreen = () => {
         showsVerticalScrollIndicator={false}
       >
         <View style={styles.cardContainer}>
-          <View style={styles.card}>
+          <View style={[styles.card, { marginTop: 0 }]}>
             <Text style={styles.cardTitle}>Bienvenido a CoinLab</Text>
             <Text style={styles.cardText}>
               Tu plataforma de criptomonedas donde podrás monitorear precios,
@@ -61,13 +61,22 @@ const styles = StyleSheet.create({
   scrollView: {
     flex: 1,
     width: '100%',
+    backgroundColor: COLORS.background,
+    borderWidth: 0,
+    borderTopWidth: 0,
   },
   scrollContent: {
     paddingBottom: 60,
+    borderWidth: 0,
+    borderTopWidth: 0,
+    paddingTop: 0,
   },
   cardContainer: {
     paddingHorizontal: 15,
     width: '100%',
+    borderWidth: 0,
+    borderTopWidth: 0,
+    paddingTop: 0,
   },
   card: {
     backgroundColor: COLORS.lightGray,

@@ -65,15 +65,25 @@ const styles = StyleSheet.create({
   flatList: {
     flex: 1,
     width: '100%',
+    backgroundColor: COLORS.background,
+    borderWidth: 0,
+    borderTopWidth: 0,
   },
   listContainer: {
     paddingHorizontal: 15,
     paddingBottom: 60,
     width: '100%',
+    borderWidth: 0,
+    borderTopWidth: 0,
+    paddingTop: 0,
   },
   header: {
     marginBottom: 10,
     width: '100%',
+    marginTop: 0,
+    borderWidth: 0,
+    borderTopWidth: 0,
+    paddingTop: 0,
   },
   sectionTitle: {
     fontSize: 20,

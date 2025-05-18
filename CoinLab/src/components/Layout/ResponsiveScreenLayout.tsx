@@ -77,9 +77,13 @@ const ResponsiveScreenLayout: React.FC<ResponsiveScreenLayoutProps> = ({
         style={[
           styles.content, 
           { 
-            paddingTop: headerSpacing + STATUS_BAR_HEIGHT + SAFE_PADDING + headerOffset,
+            paddingTop: headerSpacing - 12, // Aumentar más la resta para eliminar cualquier espacio restante
             paddingHorizontal: contentPadding,
             paddingBottom: 0,
+            backgroundColor: COLORS.background,
+            borderTopWidth: 0,
+            borderWidth: 0,
+            marginTop: -10, // Añadir margen negativo para subir el contenido
           }
         ]}
       >
@@ -117,9 +121,12 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     zIndex: 10,
+    backgroundColor: COLORS.background,
+    borderBottomWidth: 0,
   },
   content: {
     flex: 1,
+    borderTopWidth: 0,
   },
 });
 

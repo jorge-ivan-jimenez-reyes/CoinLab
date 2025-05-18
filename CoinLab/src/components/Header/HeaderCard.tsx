@@ -283,9 +283,11 @@ const HeaderCard: React.FC<HeaderCardProps> = ({
         styles.absoluteContainer,
         { 
           height: dynamicHeight,
-          shadowOpacity: expanded ? 0 : 0.3,
+          shadowOpacity: 0,
           borderBottomLeftRadius: BORDER_RADIUS,
-          borderBottomRightRadius: BORDER_RADIUS 
+          borderBottomRightRadius: BORDER_RADIUS,
+          borderBottomWidth: 0,
+          borderWidth: 0
         } 
       ]}
     >
@@ -307,14 +309,17 @@ const HeaderCard: React.FC<HeaderCardProps> = ({
               { 
                 height: dynamicHeight,
                 borderBottomLeftRadius: BORDER_RADIUS,
-                borderBottomRightRadius: BORDER_RADIUS
+                borderBottomRightRadius: BORDER_RADIUS,
+                borderBottomWidth: 0,
+                borderWidth: 0
               }
             ]}
             imageStyle={[
               styles.backgroundImage,
               {
                 borderBottomLeftRadius: BORDER_RADIUS,
-                borderBottomRightRadius: BORDER_RADIUS
+                borderBottomRightRadius: BORDER_RADIUS,
+                borderBottomWidth: 0
               }
             ]}
             resizeMode="cover"
@@ -376,7 +381,9 @@ const HeaderCard: React.FC<HeaderCardProps> = ({
               { 
                 height: dynamicHeight,
                 borderBottomLeftRadius: BORDER_RADIUS,
-                borderBottomRightRadius: BORDER_RADIUS
+                borderBottomRightRadius: BORDER_RADIUS,
+                borderBottomWidth: 0,
+                borderWidth: 0
               }
             ]}
           >
@@ -409,7 +416,6 @@ const HeaderCard: React.FC<HeaderCardProps> = ({
                   </View>
                 </View>
                 
-                {/* Contenido financiero con animación igual que con fondo de imagen */}
                 <Animated.View 
                   style={[
                     styles.financialInfoContainer,
@@ -429,17 +435,6 @@ const HeaderCard: React.FC<HeaderCardProps> = ({
             </View>
           </AnimatedLinearGradient>
         )}
-        
-        {/* Barra de expansión siempre visible */}
-        <View style={[
-          styles.dragIndicatorContainer,
-          expanded ? styles.expandedIndicatorContainer : styles.collapsedIndicatorContainer
-        ]}>
-          <View style={[
-            styles.dragIndicator,
-            expanded ? styles.dragIndicatorExpanded : styles.dragIndicatorCollapsed
-          ]} />
-        </View>
       </TouchableOpacity>
     </Animated.View>
   );
@@ -449,29 +444,32 @@ const styles = StyleSheet.create({
   absoluteContainer: {
     width: '100%',
     zIndex: 999,
-    overflow: 'visible',
+    overflow: 'hidden',
     position: 'absolute',
     top: -NOTCH_SPACE,
     left: 0,
     right: 0,
     marginTop: 0,
+    marginBottom: 0,
     backgroundColor: BACKGROUND_COLOR,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 5 },
-    shadowRadius: 8,
-    elevation: 8,
+    shadowColor: 'transparent',
+    shadowOffset: { width: 0, height: 0 },
+    shadowRadius: 0,
+    elevation: 0,
+    borderBottomWidth: 0,
+    borderWidth: 0,
   },
   contentWrapper: {
     flex: 1,
     width: '100%',
-    paddingTop: NOTCH_SPACE + 2, // Reducir padding
+    paddingTop: NOTCH_SPACE + 2,
     backgroundColor: BACKGROUND_COLOR,
   },
   innerContent: {
     flex: 1,
     padding: 16,
-    paddingTop: IS_IOS ? 12 : 10, // Menos espacio superior
-    paddingBottom: 0, // Sin padding inferior
+    paddingTop: IS_IOS ? 12 : 10,
+    paddingBottom: 0,
     backgroundColor: BACKGROUND_COLOR,
   },
   topSection: {
@@ -509,35 +507,17 @@ const styles = StyleSheet.create({
     height: '100%',
   },
   dragIndicatorContainer: {
-    width: '100%',
-    alignItems: 'center',
+    width: 0,
+    height: 0,
     position: 'absolute',
-    bottom: 8,
-    left: 0,
-    right: 0,
-    zIndex: 10,
-  },
-  expandedIndicatorContainer: {
-    bottom: 8,
-  },
-  collapsedIndicatorContainer: {
-    bottom: 8,
+    opacity: 0,
+    display: 'none'
   },
   dragIndicator: {
-    width: 70,
-    height: 4,
-    borderRadius: 4,
-    backgroundColor: 'rgba(255, 255, 255, 0.5)',
-  },
-  dragIndicatorExpanded: {
-    width: 90,
-    height: 5,
-    backgroundColor: 'rgba(255, 255, 255, 0.7)',
-  },
-  dragIndicatorCollapsed: {
-    width: 85,
-    height: 4,
-    backgroundColor: 'rgba(255, 255, 255, 0.65)',
+    width: 0,
+    height: 0,
+    opacity: 0,
+    display: 'none'
   },
   expandTouchArea: {
     display: 'none',
@@ -555,6 +535,7 @@ const styles = StyleSheet.create({
     borderTopLeftRadius: 0,
     borderTopRightRadius: 0,
     overflow: 'hidden',
+    paddingBottom: 0,
   },
   backgroundImage: {
     width: '100%',
@@ -596,6 +577,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     opacity: 0.8,
     marginTop: 15,
+    marginBottom: 0,
   },
   collapsedFinancialContainer: {
     opacity: 0,
@@ -610,8 +592,9 @@ const styles = StyleSheet.create({
     maxHeight: 200,
     overflow: 'hidden',
     marginTop: 20,
-    marginBottom: 15,
+    marginBottom: 0,
     transform: [{scale: 1}],
+    paddingBottom: 0,
   },
   });
   
