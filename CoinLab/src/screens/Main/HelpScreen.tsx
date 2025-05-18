@@ -1,67 +1,86 @@
 import React from 'react';
-import { StyleSheet, View, Text, SafeAreaView, ScrollView, TouchableOpacity } from 'react-native';
+import { StyleSheet, View, Text, SafeAreaView, ScrollView, TouchableOpacity, Dimensions } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
+import { Ionicons } from 'react-native-vector-icons';
 import COLORS from '../../theme/colors';
 import { HeaderCard } from '../../components/Header';
-import { IMAGES } from '../../assets';
+import { IMAGES } from '../../assets/index';
+
+// Obtener dimensiones para hacer el header responsivo
+const { height } = Dimensions.get('window');
+// Calcular la altura máxima que necesitamos para el contenedor
+const HEADER_CONTAINER_HEIGHT = Math.min(height * 0.08, 70); // Reducido para eliminar el espacio en blanco
 
 interface FAQItem {
-  id: string;
   question: string;
   answer: string;
 }
 
 const faqData: FAQItem[] = [
   {
-    id: '1',
     question: '¿Qué es CoinLab?',
-    answer: 'CoinLab es una plataforma de criptomonedas donde puedes monitorear precios, gestionar tu portafolio y utilizar agentes automatizados para optimizar tus inversiones.'
+    answer: 'CoinLab es una aplicación para monitorear, analizar y gestionar inversiones en criptomonedas. Ofrece herramientas para seguimiento de precios, gestión de portafolio y análisis de mercado.'
   },
   {
-    id: '2',
-    question: '¿Cómo funcionan los agentes?',
-    answer: 'Los agentes son algoritmos automatizados que analizan datos del mercado para ayudarte a tomar decisiones de inversión más informadas o incluso realizar operaciones automáticas según los parámetros que configures.'
+    question: '¿Cómo crear una cuenta?',
+    answer: 'Para crear una cuenta, ve a la pantalla de inicio y selecciona "Registrarse". Completa el formulario con tu información personal y sigue las instrucciones para verificar tu correo electrónico.'
   },
   {
-    id: '3',
-    question: '¿Es seguro utilizar CoinLab?',
-    answer: 'Sí, utilizamos medidas de seguridad de nivel bancario. Toda tu información está encriptada y nunca almacenamos tus claves privadas.'
+    question: '¿Es segura mi información?',
+    answer: 'Sí, CoinLab utiliza encriptación de nivel bancario para proteger tus datos personales y financieros. No almacenamos tus claves privadas y utilizamos autenticación de dos factores para mayor seguridad.'
   },
   {
-    id: '4',
-    question: '¿Puedo crear mis propios agentes?',
-    answer: 'Próximamente lanzaremos una función para que los usuarios avanzados puedan crear y compartir sus propios agentes de inversión.'
+    question: '¿Cómo contactar al soporte?',
+    answer: 'Puedes contactar a nuestro equipo de soporte a través del formulario en la aplicación, por correo electrónico a support@coinlab.com o mediante nuestras redes sociales.'
   }
 ];
 
 const HelpScreen = () => {
+  const renderFAQItem = (item: FAQItem, index: number) => (
+    <View key={index} style={styles.faqItem}>
+      <Text style={styles.question}>{item.question}</Text>
+      <Text style={styles.answer}>{item.answer}</Text>
+    </View>
+  );
+
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar style="dark" />
       
-      <HeaderCard 
-        title="Ayuda" 
-        backgroundImage={IMAGES.CARD_BACKGROUND}
-      />
+      <View style={styles.headerContainer}>
+        <HeaderCard 
+          title="Ayuda" 
+          backgroundImage={IMAGES.CARD_BACKGROUND}
+        />
+      </View>
       
-      <ScrollView style={styles.content}>
+      <ScrollView 
+        style={styles.content} 
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={styles.contentContainer}
+      >
         <Text style={styles.sectionTitle}>Preguntas Frecuentes</Text>
         
-        {faqData.map((item) => (
-          <View key={item.id} style={styles.faqItem}>
-            <Text style={styles.question}>{item.question}</Text>
-            <Text style={styles.answer}>{item.answer}</Text>
-          </View>
-        ))}
+        <View style={styles.faqContainer}>
+          {faqData.map(renderFAQItem)}
+        </View>
         
-        <View style={styles.contactSection}>
-          <Text style={styles.sectionTitle}>¿Necesitas más ayuda?</Text>
-          <Text style={styles.contactText}>
-            Si tienes alguna otra pregunta o necesitas soporte, contáctanos:
-          </Text>
+        <Text style={styles.sectionTitle}>Contacto</Text>
+        
+        <View style={styles.contactContainer}>
+          <TouchableOpacity style={styles.contactItem}>
+            <Ionicons name="mail" size={24} color={COLORS.primary} />
+            <Text style={styles.contactText}>support@coinlab.com</Text>
+          </TouchableOpacity>
           
-          <TouchableOpacity style={styles.contactButton}>
-            <Text style={styles.contactButtonText}>Contactar Soporte</Text>
+          <TouchableOpacity style={styles.contactItem}>
+            <Ionicons name="logo-twitter" size={24} color={COLORS.primary} />
+            <Text style={styles.contactText}>@CoinLabApp</Text>
+          </TouchableOpacity>
+          
+          <TouchableOpacity style={styles.contactItem}>
+            <Ionicons name="call" size={24} color={COLORS.primary} />
+            <Text style={styles.contactText}>+1 (800) 555-1234</Text>
           </TouchableOpacity>
         </View>
       </ScrollView>
@@ -74,9 +93,17 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: COLORS.background,
   },
+  headerContainer: {
+    height: HEADER_CONTAINER_HEIGHT,
+    zIndex: 10,
+  },
   content: {
     flex: 1,
-    padding: 15,
+  },
+  contentContainer: {
+    paddingHorizontal: 15,
+    paddingTop: HEADER_CONTAINER_HEIGHT - 10, // Reducir el espacio para acercar el contenido al header
+    paddingBottom: 20,
   },
   sectionTitle: {
     fontSize: 20,
@@ -84,6 +111,9 @@ const styles = StyleSheet.create({
     color: COLORS.text,
     marginBottom: 15,
     marginTop: 10,
+  },
+  faqContainer: {
+    marginBottom: 20,
   },
   faqItem: {
     backgroundColor: COLORS.lightGray,
@@ -94,7 +124,7 @@ const styles = StyleSheet.create({
     borderColor: COLORS.mediumGray,
   },
   question: {
-    fontSize: 16,
+    fontSize: 18,
     fontWeight: 'bold',
     color: COLORS.primary,
     marginBottom: 8,
@@ -104,26 +134,25 @@ const styles = StyleSheet.create({
     color: COLORS.text,
     lineHeight: 22,
   },
-  contactSection: {
-    marginTop: 10,
-    marginBottom: 30,
+  contactContainer: {
+    backgroundColor: COLORS.lightGray,
+    borderRadius: 10,
+    padding: 15,
+    marginBottom: 20,
+    borderWidth: 1,
+    borderColor: COLORS.mediumGray,
+  },
+  contactItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: COLORS.mediumGray,
   },
   contactText: {
-    fontSize: 14,
-    color: COLORS.text,
-    marginBottom: 20,
-    lineHeight: 20,
-  },
-  contactButton: {
-    backgroundColor: COLORS.primary,
-    borderRadius: 8,
-    padding: 15,
-    alignItems: 'center',
-  },
-  contactButtonText: {
-    color: COLORS.white,
+    marginLeft: 10,
     fontSize: 16,
-    fontWeight: 'bold',
+    color: COLORS.text,
   },
 });
 

@@ -1,21 +1,32 @@
 import React from 'react';
-import { StyleSheet, View, Text, SafeAreaView, ScrollView } from 'react-native';
+import { StyleSheet, View, Text, SafeAreaView, ScrollView, Dimensions } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import COLORS from '../../theme/colors';
 import { HeaderCard } from '../../components/Header';
-import { IMAGES } from '../../assets';
+import { IMAGES } from '../../assets/index';
+
+// Obtener dimensiones para hacer el header responsivo
+const { height } = Dimensions.get('window');
+// Calcular la altura máxima que necesitamos para el contenedor (más alto que EXPANDED_HEIGHT)
+const HEADER_CONTAINER_HEIGHT = Math.min(height * 0.08, 70); // Reducido para eliminar el espacio en blanco
 
 const HomeScreen = () => {
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar style="dark" />
       
-      <HeaderCard 
-        title="Home" 
-        backgroundImage={IMAGES.CARD_BACKGROUND}
-      />
+      <View style={styles.headerContainer}>
+        <HeaderCard 
+          title="Home" 
+          backgroundImage={IMAGES.CARD_BACKGROUND}
+        />
+      </View>
       
-      <ScrollView style={styles.content}>
+      <ScrollView 
+        style={styles.content} 
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={styles.contentContainer}
+      >
         <View style={styles.card}>
           <Text style={styles.cardTitle}>Bienvenido a CoinLab</Text>
           <Text style={styles.cardText}>
@@ -58,9 +69,17 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: COLORS.background,
   },
+  headerContainer: {
+    height: HEADER_CONTAINER_HEIGHT,
+    zIndex: 10,
+  },
   content: {
     flex: 1,
-    padding: 15,
+  },
+  contentContainer: {
+    paddingHorizontal: 15,
+    paddingTop: HEADER_CONTAINER_HEIGHT - 10, // Reducir el espacio para acercar el contenido al header
+    paddingBottom: 20,
   },
   card: {
     backgroundColor: COLORS.lightGray,

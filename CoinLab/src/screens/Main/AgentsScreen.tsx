@@ -1,9 +1,14 @@
 import React from 'react';
-import { StyleSheet, View, Text, SafeAreaView, FlatList } from 'react-native';
+import { StyleSheet, View, Text, SafeAreaView, FlatList, Dimensions } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import COLORS from '../../theme/colors';
 import { HeaderCard } from '../../components/Header';
-import { IMAGES } from '../../assets';
+import { IMAGES } from '../../assets/index';
+
+// Obtener dimensiones para hacer el header responsivo
+const { height } = Dimensions.get('window');
+// Calcular la altura máxima que necesitamos para el contenedor
+const HEADER_CONTAINER_HEIGHT = Math.min(height * 0.08, 70); // Reducido para eliminar el espacio en blanco
 
 interface Agent {
   id: string;
@@ -35,10 +40,12 @@ const AgentsScreen = () => {
     <SafeAreaView style={styles.container}>
       <StatusBar style="dark" />
       
-      <HeaderCard 
-        title="Agentes" 
-        backgroundImage={IMAGES.CARD_BACKGROUND}
-      />
+      <View style={styles.headerContainer}>
+        <HeaderCard 
+          title="Agentes" 
+          backgroundImage={IMAGES.CARD_BACKGROUND}
+        />
+      </View>
       
       <View style={styles.content}>
         <Text style={styles.sectionTitle}>Agentes Disponibles</Text>
@@ -63,9 +70,14 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: COLORS.background,
   },
+  headerContainer: {
+    height: HEADER_CONTAINER_HEIGHT,
+    zIndex: 10,
+  },
   content: {
     flex: 1,
-    padding: 15,
+    paddingHorizontal: 15,
+    marginTop: HEADER_CONTAINER_HEIGHT - 10, // Reducir el espacio para acercar el contenido al header
   },
   sectionTitle: {
     fontSize: 20,
