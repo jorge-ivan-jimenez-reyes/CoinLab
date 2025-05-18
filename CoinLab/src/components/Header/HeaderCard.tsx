@@ -66,11 +66,11 @@ const HeaderCard: React.FC<HeaderCardProps> = ({
   hideStatusBar = true, // Ocultar barra de estado por defecto
 }) => {
   const navigation = useNavigation();
-  const [expanded, setExpanded] = useState(false);
+  const [expanded, setExpanded] = useState(true);
   
   // Crear todas las referencias de animación con useNativeDriver: false explícitamente
-  const heightAnim = useRef(new Animated.Value(COLLAPSED_HEIGHT)).current;
-  const lastNotifiedHeight = useRef(COLLAPSED_HEIGHT);
+  const heightAnim = useRef(new Animated.Value(EXPANDED_HEIGHT)).current;
+  const lastNotifiedHeight = useRef(EXPANDED_HEIGHT);
   const isAnimating = useRef(false);
   const initialRender = useRef(true);
   
@@ -78,7 +78,7 @@ const HeaderCard: React.FC<HeaderCardProps> = ({
   const dragY = useRef(new Animated.Value(0)).current;
   
   // Opacidad animada para la información financiera
-  const infoOpacity = useRef(new Animated.Value(expanded ? 1 : 0)).current;
+  const infoOpacity = useRef(new Animated.Value(1)).current;
   
   // Notificar altura actual al padre - evitar notificaciones innecesarias
   const notifyHeightChange = (height: number) => {
@@ -123,18 +123,15 @@ const HeaderCard: React.FC<HeaderCardProps> = ({
         const shouldCollapse = expanded && 
           (gestureState.dy > DRAG_THRESHOLD || gestureState.vy > velocityThreshold);
         
-        // Pequeño retraso para actualización de interfaz
-        requestAnimationFrame(() => {
-          isAnimating.current = false;
-          
-          if (shouldExpand) {
-            toggleExpanded(true);
-          } else if (shouldCollapse) {
-            toggleExpanded(false);
-          } else {
-            resetToCurrentState();
-          }
-        });
+        console.log(`Gesto completado: ${shouldExpand ? 'expandir' : shouldCollapse ? 'contraer' : 'mantener'}`);
+        
+        if (shouldExpand) {
+          toggleExpanded(true);
+        } else if (shouldCollapse) {
+          toggleExpanded(false);
+        } else {
+          resetToCurrentState();
+        }
       },
     })
   ).current;
@@ -152,18 +149,17 @@ const HeaderCard: React.FC<HeaderCardProps> = ({
       }
     }
 
-    // Comenzar expandido para mostrar la información
-    setExpanded(true);
+    // Ya no es necesario establecer el estado expandido aquí, ya se inicializa expandido
+    // setExpanded(true);
     
-    // Reiniciar todos los valores animados para evitar conflictos
-    heightAnim.setValue(EXPANDED_HEIGHT);
-    dragY.setValue(0);
-    infoOpacity.setValue(1);
+    // Los valores animados ya se inicializaron con los valores correctos
+    // Simplemente notificamos al padre sobre el estado actual
     
-    lastNotifiedHeight.current = EXPANDED_HEIGHT;
-    
-    // Notificar altura inicial
+    // Notificar altura inicial y estado expandido
     notifyHeightChange(EXPANDED_HEIGHT);
+    if (onExpand) {
+      onExpand(true);
+    }
     
     // Actualizar alturas si cambian las dimensiones
     const handleDimensionsChange = () => {
@@ -187,56 +183,39 @@ const HeaderCard: React.FC<HeaderCardProps> = ({
     };
   }, [hideStatusBar]);
 
-  // Escuchar cambios en el estado expandido
+  // Notificar cambios y animar opacidad cuando cambia el estado
   useEffect(() => {
-    if (isAnimating.current) return; 
-    
-    isAnimating.current = true;
-    
     // Notificar cambio de estado al padre
     if (onExpand) {
       onExpand(expanded);
     }
     
+    // Informar al padre sobre el cambio de altura esperado
     const targetHeight = expanded ? EXPANDED_HEIGHT : COLLAPSED_HEIGHT;
     notifyHeightChange(targetHeight);
     
-    // Animar la altura con configuración adaptada
-    Animated.spring(heightAnim, {
-      toValue: targetHeight,
-      friction: expanded ? 8 : 10, // Más suave al contraer
-      tension: expanded ? 50 : 40, // Más rápido al expandir
-      useNativeDriver: false
-    }).start(() => {
-      isAnimating.current = false;
-    });
-    
-    // Animar la opacidad de la información
+    // Animar la opacidad de la información de forma independiente
     Animated.timing(infoOpacity, {
       toValue: expanded ? 1 : 0,
-      duration: 200,
+      duration: 150, // Más rápido para mejor respuesta
       useNativeDriver: false
     }).start();
-  }, [expanded]);
+  }, [expanded, onExpand, onHeightChange]);
 
   const resetToCurrentState = () => {
-    if (isAnimating.current) return; 
-    
-    isAnimating.current = true;
-    
-    const targetHeight = expanded ? EXPANDED_HEIGHT : COLLAPSED_HEIGHT;
-    notifyHeightChange(targetHeight);
-    
-    Animated.spring(heightAnim, {
-      toValue: targetHeight,
-      ...SPRING_CONFIG
-    }).start(() => {
-      isAnimating.current = false;
-    });
+    console.log(`Manteniendo estado actual: ${expanded ? 'expandido' : 'contraído'}`);
   };
 
   const toggleExpanded = (newExpanded = !expanded) => {
     if (newExpanded === expanded || isAnimating.current) return;
+    
+    console.log(`Cambiando estado a: ${newExpanded ? 'expandido' : 'contraído'}`);
+    
+    // Detener cualquier animación en curso
+    heightAnim.stopAnimation();
+    infoOpacity.stopAnimation();
+    
+    // Establecer el nuevo estado expandido - los efectos se encargarán de las animaciones
     setExpanded(newExpanded);
   };
 
@@ -263,6 +242,29 @@ const HeaderCard: React.FC<HeaderCardProps> = ({
     })
   );
   
+  // Animar directamente los cambios de altura cuando cambia el estado
+  useEffect(() => {
+    console.log(`Actualizando altura con estado: ${expanded ? 'expandido' : 'contraído'}`);
+    const targetHeight = expanded ? EXPANDED_HEIGHT : COLLAPSED_HEIGHT;
+    
+    if (isAnimating.current) {
+      // Si ya estamos animando, solo actualizar el valor final
+      heightAnim.setValue(targetHeight);
+    } else {
+      // Iniciar una nueva animación
+      isAnimating.current = true;
+      Animated.spring(heightAnim, {
+        toValue: targetHeight,
+        friction: expanded ? 8 : 6, // Menos fricción al contraer para movimiento más rápido
+        tension: expanded ? 40 : 60, // Más tensión al contraer para movimiento más decidido
+        useNativeDriver: false
+      }).start(() => {
+        isAnimating.current = false;
+        console.log(`Animación de altura completada: ${targetHeight}`);
+      });
+    }
+  }, [expanded]);
+
   // Componentes Animados
   const AnimatedImageBackground = Animated.createAnimatedComponent(ImageBackground);
   const AnimatedLinearGradient = Animated.createAnimatedComponent(LinearGradient);
@@ -395,19 +397,22 @@ const HeaderCard: React.FC<HeaderCardProps> = ({
                   </View>
                 </View>
                 
-                {/* Contenido financiero visible solo cuando está expandido */}
-                {expanded && (
-                  <View style={styles.financialInfoContainer}>
-                    <Text style={styles.profitLabel}>{profit}</Text>
-                    
-                    <View style={styles.amountContainer}>
-                      <Text style={styles.amountText}>{amount}</Text>
-                      <Text style={styles.currencyText}> {amountLabel}</Text>
-                    </View>
-                    
-                    <Text style={styles.titleText}>{title}</Text>
+                {/* Contenido financiero con animación igual que con fondo de imagen */}
+                <Animated.View 
+                  style={[
+                    styles.financialInfoContainer,
+                    expanded ? styles.expandedFinancialContainer : styles.collapsedFinancialContainer
+                  ]}
+                >
+                  <Text style={styles.profitLabel}>{profit}</Text>
+                  
+                  <View style={styles.amountContainer}>
+                    <Text style={styles.amountText}>{amount}</Text>
+                    <Text style={styles.currencyText}> {amountLabel}</Text>
                   </View>
-                )}
+                  
+                  <Text style={styles.titleText}>{title}</Text>
+                </Animated.View>
               </View>
             </View>
           </AnimatedLinearGradient>
@@ -528,10 +533,8 @@ const styles = StyleSheet.create({
   financialInfoContainer: {
     alignItems: 'center',
     justifyContent: 'center',
-    marginTop: 20,
-    marginBottom: 15,
     backgroundColor: BACKGROUND_COLOR,
-    minHeight: 150,
+    height: 'auto',
   },
   cardContainer: {
     width: '100%',
@@ -585,10 +588,16 @@ const styles = StyleSheet.create({
   collapsedFinancialContainer: {
     opacity: 0,
     maxHeight: 0,
+    overflow: 'hidden',
+    marginTop: 0,
+    marginBottom: 0,
   },
   expandedFinancialContainer: {
     opacity: 1,
     maxHeight: 200,
+    overflow: 'hidden',
+    marginTop: 20,
+    marginBottom: 15,
   },
   });
   
