@@ -1,9 +1,10 @@
-import React from 'react';
-import { StyleSheet, View, Text, ScrollView, Image, ImageSourcePropType } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { StyleSheet, View, Text, ScrollView, Image, ImageSourcePropType, TouchableOpacity } from 'react-native';
 import COLORS from '../../theme/colors';
 import { IMAGES } from '../../assets/index';
 import { ResponsiveScreenLayout } from '../../components/Layout';
 import { Ionicons } from 'react-native-vector-icons';
+import { useData, Movement } from '../../context/DataContext';
 
 // Types for cryptocurrency data
 interface Cryptocurrency {
@@ -15,17 +16,6 @@ interface Cryptocurrency {
   tiempo: string;
   price: string;
   percentage: string;
-  priceUp: boolean;
-}
-
-// Types for movement data
-interface Movement {
-  id: string;
-  type: string;
-  action: string;
-  icon: ImageSourcePropType;
-  amount: string;
-  currency: string;
   priceUp: boolean;
 }
 
@@ -50,19 +40,6 @@ const cryptocurrencies: Cryptocurrency[] = [
     price: '+$827.8',
     percentage: '23.21%',
     priceUp: true
-  }
-];
-
-// Sample data for recent movements
-const recentMovements: Movement[] = [
-  {
-    id: 'movement1',
-    type: 'Largo Plazo',
-    action: 'Venta',
-    icon: IMAGES.USER_ICON,
-    amount: '-$340.8',
-    currency: 'Bitcoin',
-    priceUp: false
   }
 ];
 
@@ -119,13 +96,15 @@ const MovementCard: React.FC<{ movement: Movement }> = ({ movement }) => {
 };
 
 const HomeScreen = () => {
+  const { user, recentMovements } = useData();
+
   return (
     <ResponsiveScreenLayout
-      title="Home"
+      title={`Welcome back, ${user.name}`}
       backgroundImage={IMAGES.CARD_BACKGROUND}
-      profit="Beneficio Total"
-      amount="25,006.89"
-      amountLabel="USD"
+      profit="Balance Disponible"
+      amount={user.availableBalance}
+      amountLabel={user.currency}
     >
       <ScrollView
         style={styles.scrollView}
@@ -144,7 +123,12 @@ const HomeScreen = () => {
           
           {/* Últimos Movimientos Section */}
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Últimos Movimientos</Text>
+            <View style={styles.sectionHeader}>
+              <Text style={styles.sectionTitle}>Últimos Movimientos</Text>
+              <TouchableOpacity style={styles.viewAllButton}>
+                <Text style={styles.viewAllText}>Ver Todos</Text>
+              </TouchableOpacity>
+            </View>
             
             {recentMovements.map(movement => (
               <MovementCard key={movement.id} movement={movement} />
@@ -296,6 +280,21 @@ const styles = StyleSheet.create({
   movementCurrency: {
     fontSize: 14,
     color: COLORS.text,
+  },
+  sectionHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  viewAllButton: {
+    padding: 10,
+    backgroundColor: COLORS.primary,
+    borderRadius: 5,
+  },
+  viewAllText: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: COLORS.white,
   },
 });
 

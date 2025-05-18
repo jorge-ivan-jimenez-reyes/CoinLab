@@ -360,6 +360,10 @@ const HeaderCard: React.FC<HeaderCardProps> = ({
                   <Text style={styles.currencyText}> {amountLabel}</Text>
                 </View>
                 
+                {profitPercentage ? (
+                  <Text style={styles.profitPercentage}>{profitPercentage}</Text>
+                ) : null}
+                
                 <Text style={styles.titleText}>{title}</Text>
               </Animated.View>
             </View>
@@ -547,6 +551,13 @@ const styles = StyleSheet.create({
     right: 0,
     bottom: 0,
     backgroundColor: 'rgba(0, 0, 0, 0.4)',
+  },
+  profitPercentage: {
+    color: '#4CAF50', // Color verde para beneficios
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginTop: 5,
+    marginBottom: 0,
   },
   });
   

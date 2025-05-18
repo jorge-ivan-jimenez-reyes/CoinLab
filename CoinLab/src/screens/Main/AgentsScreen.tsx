@@ -1,61 +1,84 @@
 import React from 'react';
-import { StyleSheet, View, Text, FlatList } from 'react-native';
+import { StyleSheet, View, Text, FlatList, TouchableOpacity, Image } from 'react-native';
 import COLORS from '../../theme/colors';
 import { IMAGES } from '../../assets/index';
 import { ResponsiveScreenLayout } from '../../components/Layout';
-
-interface Agent {
-  id: string;
-  name: string;
-  description: string;
-}
-
-const agentsData: Agent[] = [
-  { id: '1', name: 'Agente Alpha', description: 'Especializado en trading automático de Bitcoin' },
-  { id: '2', name: 'Agente Beta', description: 'Enfocado en detección de patrones en altcoins' },
-  { id: '3', name: 'Agente Delta', description: 'Algoritmo de inversión a largo plazo' },
-  { id: '4', name: 'Agente Gamma', description: 'Estrategias de trading de alta frecuencia' },
-  { id: '5', name: 'Agente Omega', description: 'Análisis de sentimiento en redes sociales' },
-];
+import { Ionicons } from 'react-native-vector-icons';
+import { useData, Agent } from '../../context/DataContext';
 
 const AgentsScreen = () => {
+  const { agents, agentPortfolio, addAgent } = useData();
+
   const renderAgentItem = ({ item }: { item: Agent }) => (
     <View style={styles.agentCard}>
-      <Text style={styles.agentName}>{item.name}</Text>
-      <Text style={styles.agentDescription}>{item.description}</Text>
-      <View style={styles.agentStatus}>
-        <View style={styles.statusIndicator} />
-        <Text style={styles.statusText}>Activo</Text>
+      <View style={styles.leftContent}>
+        <Image source={IMAGES.USER_ICON} style={styles.agentIcon} />
+        <View style={styles.agentInfo}>
+          <Text style={styles.agentName}>{item.name}</Text>
+          <Text style={styles.agentType}>Criptomonedas</Text>
+        </View>
+      </View>
+      <View style={styles.rightContent}>
+        <Text style={styles.agentAmount}>${item.investment}</Text>
+        <Text style={styles.cryptoNames}>
+          {item.id === '1' ? 'Bitcoin, Etherium' : 
+           item.id === '2' ? 'Binance' : 
+           'Doge'}
+        </Text>
       </View>
     </View>
   );
 
-  const ListHeaderComponent = () => (
+  const handleAddAgent = () => {
+    const newAgent = {
+      name: 'Nuevo Agente',
+      description: 'Descripción del nuevo agente',
+      status: 'inactive' as const,
+      investment: '0.00',
+      profit: '+0.00',
+      profitPercentage: '+0.00%'
+    };
+    
+    addAgent(newAgent);
+  };
+
+  const HeaderComponent = () => (
     <View style={styles.header}>
-      <Text style={styles.sectionTitle}>Agentes Disponibles</Text>
-      <Text style={styles.sectionDescription}>
-        Los agentes son algoritmos automatizados que te ayudan a gestionar tus inversiones.
-      </Text>
+      <View style={styles.headerRow}>
+        <Text style={styles.headerTitle}>Agentes</Text>
+        <TouchableOpacity 
+          style={styles.addButton}
+          onPress={handleAddAgent}
+        >
+          <View style={styles.addButtonContent}>
+            <Ionicons name="add" size={18} color={COLORS.white} />
+            <Text style={styles.addButtonText}>Nuevo Agente</Text>
+          </View>
+        </TouchableOpacity>
+      </View>
     </View>
   );
 
+  const ListSeparator = () => <View style={styles.separator} />;
+
   return (
     <ResponsiveScreenLayout
-      title="Agentes"
+      title="Cantidad total en agentes"
       backgroundImage={IMAGES.CARD_BACKGROUND}
-      profit="Rendimiento Total"
-      amount="12,458.37"
+      profit="Beneficio Total"
+      amount={agentPortfolio.totalInvested}
       amountLabel="USD"
-      contentPadding={0}
+      profitPercentage="+$2,125.78 (5.6%)"
     >
       <FlatList
         style={styles.flatList}
-        data={agentsData}
+        data={agents.slice(0, 3)} // Limitamos a 3 agentes para coincidir con el diseño
         renderItem={renderAgentItem}
         keyExtractor={item => item.id}
         contentContainerStyle={styles.listContainer}
         showsVerticalScrollIndicator={false}
-        ListHeaderComponent={<ListHeaderComponent />}
+        ListHeaderComponent={<HeaderComponent />}
+        ItemSeparatorComponent={ListSeparator}
       />
     </ResponsiveScreenLayout>
   );
@@ -66,73 +89,98 @@ const styles = StyleSheet.create({
     flex: 1,
     width: '100%',
     backgroundColor: COLORS.background,
-    borderWidth: 0,
-    borderTopWidth: 0,
   },
   listContainer: {
     paddingHorizontal: 15,
     paddingBottom: 60,
-    width: '100%',
-    borderWidth: 0,
-    borderTopWidth: 0,
-    paddingTop: 0,
   },
   header: {
-    marginBottom: 10,
+    paddingVertical: 15,
     width: '100%',
-    marginTop: 0,
-    borderWidth: 0,
-    borderTopWidth: 0,
-    paddingTop: 0,
   },
-  sectionTitle: {
-    fontSize: 20,
+  headerRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    width: '100%',
+  },
+  headerTitle: {
+    fontSize: 28,
     fontWeight: 'bold',
     color: COLORS.text,
-    marginBottom: 10,
-  },
-  sectionDescription: {
-    fontSize: 16,
-    color: COLORS.text,
-    marginBottom: 20,
-    lineHeight: 22,
   },
   agentCard: {
-    backgroundColor: COLORS.lightGray,
-    borderRadius: 10,
-    padding: 15,
-    marginBottom: 15,
-    borderWidth: 1,
-    borderColor: COLORS.mediumGray,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: 20,
     width: '100%',
   },
-  agentName: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: COLORS.primary,
-    marginBottom: 8,
-  },
-  agentDescription: {
-    fontSize: 14,
-    color: COLORS.text,
-    marginBottom: 12,
-    lineHeight: 20,
-  },
-  agentStatus: {
+  leftContent: {
     flexDirection: 'row',
     alignItems: 'center',
   },
-  statusIndicator: {
-    width: 10,
-    height: 10,
-    borderRadius: 5,
-    backgroundColor: COLORS.success,
-    marginRight: 6,
+  agentIcon: {
+    width: 30,
+    height: 30,
+    borderRadius: 8,
+    marginRight: 15,
+    resizeMode: 'cover',
   },
-  statusText: {
+  agentInfo: {
+    justifyContent: 'center',
+  },
+  agentName: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: COLORS.text,
+    marginBottom: 4,
+  },
+  agentType: {
+    fontSize: 16,
+    color: COLORS.textLight,
+  },
+  rightContent: {
+    alignItems: 'flex-end',
+  },
+  agentAmount: {
+    fontSize: 22,
+    fontWeight: 'bold',
+    color: COLORS.text,
+    marginBottom: 4,
+  },
+  cryptoNames: {
+    fontSize: 16,
+    color: COLORS.text,
+  },
+  separator: {
+    height: 1,
+    backgroundColor: COLORS.lightGray,
+    width: '100%',
+  },
+  addButton: {
+    backgroundColor: '#222222',
+    borderRadius: 20,
+    paddingVertical: 8,
+    paddingHorizontal: 14,
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 2,
+    elevation: 3,
+  },
+  addButtonContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 4,
+  },
+  addButtonText: {
     fontSize: 14,
-    color: COLORS.success,
-  },
+    fontWeight: 'bold',
+    color: COLORS.white,
+  }
 });
 
 export default AgentsScreen; 
