@@ -1,9 +1,10 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ImageBackground, Dimensions, Animated, Platform, PanResponder, StatusBar, SafeAreaView, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ImageBackground, Dimensions, Animated, Platform, PanResponder, StatusBar, SafeAreaView, ScrollView, Easing } from 'react-native';
 import { Ionicons } from 'react-native-vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import { LinearGradient } from 'expo-linear-gradient';
 import COLORS from '../../theme/colors';
+import { useHeader } from '../../context/HeaderContext';
 
 // Obtener las dimensiones de la pantalla y ajustar dinámicamente
 const { width, height } = Dimensions.get('window');
@@ -66,11 +67,14 @@ const HeaderCard: React.FC<HeaderCardProps> = ({
   hideStatusBar = true, // Ocultar barra de estado por defecto
 }) => {
   const navigation = useNavigation();
-  const [expanded, setExpanded] = useState(true);
+  // Usar el contexto global en lugar del estado local
+  const { isHeaderExpanded, toggleHeader } = useHeader();
+  // Mantenemos una referencia al estado expandido del contexto
+  const expanded = isHeaderExpanded;
   
   // Crear todas las referencias de animación con useNativeDriver: false explícitamente
-  const heightAnim = useRef(new Animated.Value(EXPANDED_HEIGHT)).current;
-  const lastNotifiedHeight = useRef(EXPANDED_HEIGHT);
+  const heightAnim = useRef(new Animated.Value(expanded ? EXPANDED_HEIGHT : COLLAPSED_HEIGHT)).current;
+  const lastNotifiedHeight = useRef(expanded ? EXPANDED_HEIGHT : COLLAPSED_HEIGHT);
   const isAnimating = useRef(false);
   const initialRender = useRef(true);
   
@@ -78,7 +82,7 @@ const HeaderCard: React.FC<HeaderCardProps> = ({
   const dragY = useRef(new Animated.Value(0)).current;
   
   // Opacidad animada para la información financiera
-  const infoOpacity = useRef(new Animated.Value(1)).current;
+  const infoOpacity = useRef(new Animated.Value(expanded ? 1 : 0)).current;
   
   // Notificar altura actual al padre - evitar notificaciones innecesarias
   const notifyHeightChange = (height: number) => {
@@ -99,17 +103,18 @@ const HeaderCard: React.FC<HeaderCardProps> = ({
     PanResponder.create({
       onStartShouldSetPanResponder: () => true,
       onMoveShouldSetPanResponder: (_, gestureState) => {
-        return Math.abs(gestureState.dy) > 5; 
+        // Responder más rápido a los movimientos verticales
+        return Math.abs(gestureState.dy) > 3; 
       },
       onPanResponderGrant: () => {
+        // Resetear el valor de arrastre al iniciar
         dragY.setValue(0);
-        isAnimating.current = true;
       },
       onPanResponderMove: (_, gestureState) => {
-        // Limitar arrastre para evitar valores extremos
+        // Limitar arrastre para evitar valores extremos, pero mantener sensibilidad
         const drag = expanded 
-          ? Math.max(-20, Math.min(gestureState.dy * 0.8, 50)) 
-          : Math.max(-50, Math.min(gestureState.dy * 0.8, 20)); 
+          ? Math.max(-15, Math.min(gestureState.dy, 40)) 
+          : Math.max(-40, Math.min(gestureState.dy, 15)); 
         
         dragY.setValue(drag); 
       },
@@ -117,18 +122,22 @@ const HeaderCard: React.FC<HeaderCardProps> = ({
         // Resetear valor de arrastre inmediatamente
         dragY.setValue(0);
         
-        const velocityThreshold = 0.3;
-        const shouldExpand = !expanded && 
-          (gestureState.dy < -DRAG_THRESHOLD || gestureState.vy < -velocityThreshold);
-        const shouldCollapse = expanded && 
-          (gestureState.dy > DRAG_THRESHOLD || gestureState.vy > velocityThreshold);
+        // Aumentar sensibilidad a la velocidad y reducir umbral de distancia
+        const velocityThreshold = 0.2;
+        const distanceThreshold = 15;
         
-        console.log(`Gesto completado: ${shouldExpand ? 'expandir' : shouldCollapse ? 'contraer' : 'mantener'}`);
+        const shouldExpand = !expanded && 
+          (gestureState.dy < -distanceThreshold || gestureState.vy < -velocityThreshold);
+        const shouldCollapse = expanded && 
+          (gestureState.dy > distanceThreshold || gestureState.vy > velocityThreshold);
+        
+        console.log(`Gesto completado: ${shouldExpand ? 'expandir' : shouldCollapse ? 'contraer' : 'mantener'}, 
+          velocidad: ${gestureState.vy.toFixed(2)}, distancia: ${gestureState.dy.toFixed(2)}`);
         
         if (shouldExpand) {
-          toggleExpanded(true);
+          toggleHeader(true);
         } else if (shouldCollapse) {
-          toggleExpanded(false);
+          toggleHeader(false);
         } else {
           resetToCurrentState();
         }
@@ -149,16 +158,13 @@ const HeaderCard: React.FC<HeaderCardProps> = ({
       }
     }
 
-    // Ya no es necesario establecer el estado expandido aquí, ya se inicializa expandido
-    // setExpanded(true);
+    // Notificar altura inicial y estado expandido basado en el contexto global
+    const initialHeight = expanded ? EXPANDED_HEIGHT : COLLAPSED_HEIGHT;
+    notifyHeightChange(initialHeight);
     
-    // Los valores animados ya se inicializaron con los valores correctos
-    // Simplemente notificamos al padre sobre el estado actual
-    
-    // Notificar altura inicial y estado expandido
-    notifyHeightChange(EXPANDED_HEIGHT);
+    // Informar al componente padre sobre el estado actual
     if (onExpand) {
-      onExpand(true);
+      onExpand(expanded);
     }
     
     // Actualizar alturas si cambian las dimensiones
@@ -181,42 +187,41 @@ const HeaderCard: React.FC<HeaderCardProps> = ({
         StatusBar.setHidden(false);
       }
     };
-  }, [hideStatusBar]);
+  }, [hideStatusBar, expanded]);
 
+  // Animar directamente los cambios de altura cuando cambia el estado
+  useEffect(() => {
+    console.log(`Actualizando altura con estado: ${expanded ? 'expandido' : 'contraído'}`);
+    const targetHeight = expanded ? EXPANDED_HEIGHT : COLLAPSED_HEIGHT;
+    
+    // Iniciar una nueva animación de altura con prioridad sobre cualquier otra
+    isAnimating.current = true;
+    
+    // Usar Animated.timing para una respuesta más precisa y predecible
+    Animated.timing(heightAnim, {
+      toValue: targetHeight,
+      duration: 250, // Duración fija para previsibilidad
+      easing: Easing.bezier(0.25, 0.1, 0.25, 1), // Curva de aceleración suave
+      useNativeDriver: false
+    }).start(() => {
+      isAnimating.current = false;
+      console.log(`Animación de altura completada: ${targetHeight}`);
+    });
+  }, [expanded]);
+  
   // Notificar cambios y animar opacidad cuando cambia el estado
   useEffect(() => {
-    // Notificar cambio de estado al padre
-    if (onExpand) {
-      onExpand(expanded);
-    }
-    
-    // Informar al padre sobre el cambio de altura esperado
-    const targetHeight = expanded ? EXPANDED_HEIGHT : COLLAPSED_HEIGHT;
-    notifyHeightChange(targetHeight);
-    
-    // Animar la opacidad de la información de forma independiente
+    // Animar la opacidad de la información de forma independiente - más rápida
     Animated.timing(infoOpacity, {
       toValue: expanded ? 1 : 0,
-      duration: 150, // Más rápido para mejor respuesta
+      duration: 120, // Más rápido para una respuesta inmediata
+      easing: Easing.linear, // Lineal para cambio de opacidad
       useNativeDriver: false
     }).start();
-  }, [expanded, onExpand, onHeightChange]);
+  }, [expanded]);
 
   const resetToCurrentState = () => {
     console.log(`Manteniendo estado actual: ${expanded ? 'expandido' : 'contraído'}`);
-  };
-
-  const toggleExpanded = (newExpanded = !expanded) => {
-    if (newExpanded === expanded || isAnimating.current) return;
-    
-    console.log(`Cambiando estado a: ${newExpanded ? 'expandido' : 'contraído'}`);
-    
-    // Detener cualquier animación en curso
-    heightAnim.stopAnimation();
-    infoOpacity.stopAnimation();
-    
-    // Establecer el nuevo estado expandido - los efectos se encargarán de las animaciones
-    setExpanded(newExpanded);
   };
 
   const handleBackPress = () => {
@@ -242,32 +247,35 @@ const HeaderCard: React.FC<HeaderCardProps> = ({
     })
   );
   
-  // Animar directamente los cambios de altura cuando cambia el estado
-  useEffect(() => {
-    console.log(`Actualizando altura con estado: ${expanded ? 'expandido' : 'contraído'}`);
-    const targetHeight = expanded ? EXPANDED_HEIGHT : COLLAPSED_HEIGHT;
-    
-    if (isAnimating.current) {
-      // Si ya estamos animando, solo actualizar el valor final
-      heightAnim.setValue(targetHeight);
-    } else {
-      // Iniciar una nueva animación
-      isAnimating.current = true;
-      Animated.spring(heightAnim, {
-        toValue: targetHeight,
-        friction: expanded ? 8 : 6, // Menos fricción al contraer para movimiento más rápido
-        tension: expanded ? 40 : 60, // Más tensión al contraer para movimiento más decidido
-        useNativeDriver: false
-      }).start(() => {
-        isAnimating.current = false;
-        console.log(`Animación de altura completada: ${targetHeight}`);
-      });
-    }
-  }, [expanded]);
-
   // Componentes Animados
   const AnimatedImageBackground = Animated.createAnimatedComponent(ImageBackground);
   const AnimatedLinearGradient = Animated.createAnimatedComponent(LinearGradient);
+
+  // Función para cambiar el estado usando el contexto global
+  const toggleExpanded = (newExpanded = !expanded) => {
+    // Si ya estamos en el estado deseado, no hacemos nada
+    if (newExpanded === expanded) return;
+    
+    // Incluso si estamos animando, permitimos cambiar el estado para mayor responsividad
+    console.log(`Cambiando estado local a: ${newExpanded ? 'expandido' : 'contraído'}`);
+    
+    // Detener cualquier animación en curso
+    heightAnim.stopAnimation();
+    infoOpacity.stopAnimation();
+    
+    // Forzar valores inmediatos para una respuesta más rápida
+    const targetHeight = newExpanded ? EXPANDED_HEIGHT : COLLAPSED_HEIGHT;
+    const targetOpacity = newExpanded ? 1 : 0;
+    
+    // Notificar inmediatamente para evitar retrasos en la interfaz
+    if (onExpand) {
+      onExpand(newExpanded);
+    }
+    notifyHeightChange(targetHeight);
+    
+    // Usar el toggleHeader del contexto para cambiar el estado global
+    toggleHeader(newExpanded);
+  };
 
   return (
     <Animated.View 
@@ -282,10 +290,14 @@ const HeaderCard: React.FC<HeaderCardProps> = ({
       ]}
     >
       <TouchableOpacity
-        activeOpacity={1}
+        activeOpacity={0.8}
+        delayPressIn={0}
         style={styles.fullTouchContainer}
         {...panResponder.panHandlers}
-        onPress={() => toggleExpanded()}
+        onPress={() => {
+          console.log('Toque directo detectado');
+          toggleExpanded();
+        }}
       >
         {backgroundImage ? (
           <AnimatedImageBackground
@@ -523,9 +535,9 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255, 255, 255, 0.7)',
   },
   dragIndicatorCollapsed: {
-    width: 70,
+    width: 85,
     height: 4,
-    backgroundColor: 'rgba(255, 255, 255, 0.5)',
+    backgroundColor: 'rgba(255, 255, 255, 0.65)',
   },
   expandTouchArea: {
     display: 'none',
@@ -591,6 +603,7 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
     marginTop: 0,
     marginBottom: 0,
+    transform: [{scale: 0.95}],
   },
   expandedFinancialContainer: {
     opacity: 1,
@@ -598,6 +611,7 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
     marginTop: 20,
     marginBottom: 15,
+    transform: [{scale: 1}],
   },
   });
   
