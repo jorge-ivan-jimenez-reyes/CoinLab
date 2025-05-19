@@ -311,8 +311,9 @@ const WelcomeScreen: React.FC<WelcomeScreenProps> = ({ navigation }) => {
           
           <TouchableOpacity style={styles.googleButton} onPress={handleGoogleLogin}>
             <Image 
-              source={{ uri: 'https://upload.wikimedia.org/wikipedia/commons/5/53/Google_%22G%22_Logo.svg' }}
-              style={styles.googleIcon}
+              source={IMAGES.GOOGLE_ICON} 
+              style={styles.googleIcon} 
+              resizeMode="contain"
             />
             <Text style={styles.googleButtonText}>Continuar con Google</Text>
           </TouchableOpacity>
@@ -411,7 +412,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     backgroundColor: COLORS.white,
     borderRadius: 30,
-    padding: 12,
+    padding: 14,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.3,
@@ -421,7 +422,7 @@ const styles = StyleSheet.create({
   googleIcon: {
     width: 24,
     height: 24,
-    marginRight: 10,
+    marginRight: 12,
   },
   googleButtonText: {
     color: '#5F6368',

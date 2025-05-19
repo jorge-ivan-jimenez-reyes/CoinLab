@@ -22,5 +22,6 @@ export const IMAGES = {
   BITCOIN: require('./bitcoin.png'),
   ETHEREUM: require('./etherum.png'),
   USER_ICON: require('./user.png'),
+  GOOGLE_ICON: require('./google.png'),
   // Otras imágenes que puedas necesitar en el futuro
 }; 
