@@ -4,14 +4,12 @@ import {
   Text, 
   StyleSheet, 
   TouchableOpacity, 
-  ScrollView, 
-  SafeAreaView,
-  StatusBar
+  ScrollView
 } from 'react-native';
 import { Ionicons } from 'react-native-vector-icons';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import COLORS from '../../theme/colors';
-import HeaderCard from '../../components/Header/HeaderCard';
+import { ResponsiveScreenLayout } from '../../components/Layout';
 import { IMAGES } from '../../assets';
 
 interface RouteParams {
@@ -50,43 +48,30 @@ const HelpDetailScreen: React.FC = () => {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="light-content" backgroundColor="#171717" />
+    <ResponsiveScreenLayout
+      title={content.title}
+      showBackButton={true}
+      onBackPress={handleBackPress}
+      backgroundImage={IMAGES.CARD_BACKGROUND}
+    >
+      <View style={styles.questionContainer}>
+        <Text style={styles.questionContent}>{content.content}</Text>
+      </View>
       
-      <HeaderCard 
-        title={content.title}
-        amount=""
-        amountLabel=""
-        profit=""
-        showBackButton={true}
-        onBackPress={handleBackPress}
-        currencySymbol=""
-        backgroundImage={IMAGES.CARD_BACKGROUND}
-      />
-      
-      <ScrollView 
-        style={styles.content}
-        contentContainerStyle={{paddingTop: 140}}
-      >
-        <View style={styles.questionContainer}>
-          <Text style={styles.questionContent}>{content.content}</Text>
+      <View style={styles.helpfulContainer}>
+        <Text style={styles.helpfulText}>¿Te resultó útil esta información?</Text>
+        <View style={styles.feedbackButtons}>
+          <TouchableOpacity style={styles.feedbackButton}>
+            <Ionicons name="thumbs-up-outline" size={20} color={COLORS.success} />
+            <Text style={[styles.feedbackText, { color: COLORS.success }]}>Sí</Text>
+          </TouchableOpacity>
+          
+          <TouchableOpacity style={styles.feedbackButton}>
+            <Ionicons name="thumbs-down-outline" size={20} color={COLORS.error} />
+            <Text style={[styles.feedbackText, { color: COLORS.error }]}>No</Text>
+          </TouchableOpacity>
         </View>
-        
-        <View style={styles.helpfulContainer}>
-          <Text style={styles.helpfulText}>¿Te resultó útil esta información?</Text>
-          <View style={styles.feedbackButtons}>
-            <TouchableOpacity style={styles.feedbackButton}>
-              <Ionicons name="thumbs-up-outline" size={20} color={COLORS.success} />
-              <Text style={[styles.feedbackText, { color: COLORS.success }]}>Sí</Text>
-            </TouchableOpacity>
-            
-            <TouchableOpacity style={styles.feedbackButton}>
-              <Ionicons name="thumbs-down-outline" size={20} color={COLORS.error} />
-              <Text style={[styles.feedbackText, { color: COLORS.error }]}>No</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-      </ScrollView>
+      </View>
       
       <View style={styles.footer}>
         <TouchableOpacity style={styles.contactButton}>
@@ -94,19 +79,11 @@ const HelpDetailScreen: React.FC = () => {
           <Text style={styles.contactText}>Contactar Soporte</Text>
         </TouchableOpacity>
       </View>
-    </SafeAreaView>
+    </ResponsiveScreenLayout>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: COLORS.background,
-  },
-  content: {
-    flex: 1,
-    paddingHorizontal: 20,
-  },
   questionContainer: {
     marginBottom: 30,
     backgroundColor: COLORS.lightGray,
@@ -159,10 +136,8 @@ const styles = StyleSheet.create({
     fontWeight: '500',
   },
   footer: {
-    paddingHorizontal: 20,
     paddingVertical: 15,
-    borderTopWidth: 1,
-    borderTopColor: '#EEEEEE',
+    marginTop: 20,
   },
   contactButton: {
     flexDirection: 'row',

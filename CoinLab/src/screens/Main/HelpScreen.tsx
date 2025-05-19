@@ -4,14 +4,13 @@ import {
   Text, 
   StyleSheet, 
   TouchableOpacity, 
-  ScrollView, 
-  SafeAreaView,
+  ScrollView,
   StatusBar
 } from 'react-native';
 import { Ionicons } from 'react-native-vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import COLORS from '../../theme/colors';
-import HeaderCard from '../../components/Header/HeaderCard';
+import { ResponsiveScreenLayout } from '../../components/Layout';
 import { IMAGES } from '../../assets';
 import { useData } from '../../context/DataContext';
 
@@ -79,96 +78,86 @@ const HelpScreen: React.FC = () => {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="light-content" backgroundColor="#171717" />
+    <ResponsiveScreenLayout
+      title="¿Cómo te podemos ayudar hoy?"
+      amount={user.name}
+      amountLabel=""
+      profit=""
+      showBackButton={true}
+      backgroundImage={IMAGES.CARD_BACKGROUND}
+    >
+      <Text style={styles.headerTitle}>Preguntas Comunes</Text>
       
-      <HeaderCard 
-        title="¿Cómo te podemos ayudar hoy?"
-        amount={user.name}
-        amountLabel=""
-        profit=""
-        showBackButton={true}
-        currencySymbol=""
-        backgroundImage={IMAGES.CARD_BACKGROUND}
-      />
-      
-      <ScrollView 
-        style={styles.content}
-        contentContainerStyle={{paddingTop: 140}}
+      <AccordionItem 
+        title="Agentes" 
+        isOpen={openSections.agents}
+        toggleOpen={() => toggleSection('agents')}
       >
-        <Text style={styles.headerTitle}>Preguntas Comunes</Text>
-        
-        <AccordionItem 
-          title="Agentes" 
-          isOpen={openSections.agents}
-          toggleOpen={() => toggleSection('agents')}
+        <TouchableOpacity 
+          style={styles.questionButton}
+          onPress={() => handleNavigation('HelpDetail', { 
+            title: 'Agentes', 
+            questionId: 'agent-function' 
+          })}
         >
-          <TouchableOpacity 
-            style={styles.questionButton}
-            onPress={() => handleNavigation('HelpDetail', { 
-              title: 'Agentes', 
-              questionId: 'agent-function' 
-            })}
-          >
-            <Text style={styles.questionText}>¿Como funcionan los agentes?</Text>
-            <Ionicons name="chevron-forward" size={24} color={COLORS.text} />
-          </TouchableOpacity>
-          
-          <TouchableOpacity 
-            style={styles.questionButton}
-            onPress={() => handleNavigation('HelpDetail', { 
-              title: 'Agentes', 
-              questionId: 'agent-money' 
-            })}
-          >
-            <Text style={styles.questionText}>¿Los Agentes usan mi dinero?</Text>
-            <Ionicons name="chevron-forward" size={24} color={COLORS.text} />
-          </TouchableOpacity>
-          
-          <TouchableOpacity 
-            style={styles.questionButton}
-            onPress={() => handleNavigation('HelpDetail', { 
-              title: 'Agentes', 
-              questionId: 'agent-intensity' 
-            })}
-          >
-            <Text style={styles.questionText}>Intensidad en los agentes</Text>
-            <Ionicons name="chevron-forward" size={24} color={COLORS.text} />
-          </TouchableOpacity>
-        </AccordionItem>
+          <Text style={styles.questionText}>¿Como funcionan los agentes?</Text>
+          <Ionicons name="chevron-forward" size={24} color={COLORS.text} />
+        </TouchableOpacity>
         
-        <AccordionItem 
-          title="Informacion Bancaria" 
-          isOpen={openSections.banking}
-          toggleOpen={() => toggleSection('banking')}
+        <TouchableOpacity 
+          style={styles.questionButton}
+          onPress={() => handleNavigation('HelpDetail', { 
+            title: 'Agentes', 
+            questionId: 'agent-money' 
+          })}
         >
-          <TouchableOpacity style={styles.questionButton}>
-            <Text style={styles.questionText}>¿Cómo agregar mi cuenta bancaria?</Text>
-            <Ionicons name="chevron-forward" size={24} color={COLORS.text} />
-          </TouchableOpacity>
-          
-          <TouchableOpacity style={styles.questionButton}>
-            <Text style={styles.questionText}>Transferencias y retiros</Text>
-            <Ionicons name="chevron-forward" size={24} color={COLORS.text} />
-          </TouchableOpacity>
-        </AccordionItem>
+          <Text style={styles.questionText}>¿Los Agentes usan mi dinero?</Text>
+          <Ionicons name="chevron-forward" size={24} color={COLORS.text} />
+        </TouchableOpacity>
         
-        <AccordionItem 
-          title="Seguridad" 
-          isOpen={openSections.security}
-          toggleOpen={() => toggleSection('security')}
+        <TouchableOpacity 
+          style={styles.questionButton}
+          onPress={() => handleNavigation('HelpDetail', { 
+            title: 'Agentes', 
+            questionId: 'agent-intensity' 
+          })}
         >
-          <TouchableOpacity style={styles.questionButton}>
-            <Text style={styles.questionText}>¿Cómo proteger mi cuenta?</Text>
-            <Ionicons name="chevron-forward" size={24} color={COLORS.text} />
-          </TouchableOpacity>
-          
-          <TouchableOpacity style={styles.questionButton}>
-            <Text style={styles.questionText}>Autenticación de dos factores</Text>
-            <Ionicons name="chevron-forward" size={24} color={COLORS.text} />
-          </TouchableOpacity>
-        </AccordionItem>
-      </ScrollView>
+          <Text style={styles.questionText}>Intensidad en los agentes</Text>
+          <Ionicons name="chevron-forward" size={24} color={COLORS.text} />
+        </TouchableOpacity>
+      </AccordionItem>
+      
+      <AccordionItem 
+        title="Informacion Bancaria" 
+        isOpen={openSections.banking}
+        toggleOpen={() => toggleSection('banking')}
+      >
+        <TouchableOpacity style={styles.questionButton}>
+          <Text style={styles.questionText}>¿Cómo agregar mi cuenta bancaria?</Text>
+          <Ionicons name="chevron-forward" size={24} color={COLORS.text} />
+        </TouchableOpacity>
+        
+        <TouchableOpacity style={styles.questionButton}>
+          <Text style={styles.questionText}>Transferencias y retiros</Text>
+          <Ionicons name="chevron-forward" size={24} color={COLORS.text} />
+        </TouchableOpacity>
+      </AccordionItem>
+      
+      <AccordionItem 
+        title="Seguridad" 
+        isOpen={openSections.security}
+        toggleOpen={() => toggleSection('security')}
+      >
+        <TouchableOpacity style={styles.questionButton}>
+          <Text style={styles.questionText}>¿Cómo proteger mi cuenta?</Text>
+          <Ionicons name="chevron-forward" size={24} color={COLORS.text} />
+        </TouchableOpacity>
+        
+        <TouchableOpacity style={styles.questionButton}>
+          <Text style={styles.questionText}>Autenticación de dos factores</Text>
+          <Ionicons name="chevron-forward" size={24} color={COLORS.text} />
+        </TouchableOpacity>
+      </AccordionItem>
       
       <View style={styles.footer}>
         <TouchableOpacity style={styles.moreOptionsButton}>
@@ -176,19 +165,11 @@ const HelpScreen: React.FC = () => {
           <Text style={styles.moreOptionsText}>Mas Opciones</Text>
         </TouchableOpacity>
       </View>
-    </SafeAreaView>
+    </ResponsiveScreenLayout>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: COLORS.background,
-  },
-  content: {
-    flex: 1,
-    paddingHorizontal: 20,
-  },
   headerTitle: {
     fontSize: 24,
     fontWeight: 'bold',
@@ -242,10 +223,8 @@ const styles = StyleSheet.create({
     paddingRight: 10,
   },
   footer: {
-    paddingHorizontal: 20,
     paddingVertical: 15,
-    borderTopWidth: 1,
-    borderTopColor: '#EEEEEE',
+    marginTop: 20,
   },
   moreOptionsButton: {
     flexDirection: 'row',
