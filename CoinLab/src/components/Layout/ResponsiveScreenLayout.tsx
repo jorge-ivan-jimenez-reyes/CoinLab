@@ -7,8 +7,8 @@ import COLORS from '../../theme/colors';
 // Obtener dimensiones para hacer el header responsivo
 const { height, width } = Dimensions.get('window');
 // Calcular la altura para los estados contraído y expandido
-const COLLAPSED_HEIGHT = Math.min(height * 0.12, 110) + (Platform.OS === 'ios' ? 50 : StatusBar.currentHeight || 0);
-const EXPANDED_HEIGHT = height * 0.38 + (Platform.OS === 'ios' ? 50 : StatusBar.currentHeight || 0);
+const COLLAPSED_HEIGHT = Math.min(height * 0.12, 90) + (Platform.OS === 'ios' ? 40 : StatusBar.currentHeight || 0);
+const EXPANDED_HEIGHT = height * 0.30 + (Platform.OS === 'ios' ? 50 : StatusBar.currentHeight || 0);
 // Margen superior para evitar la barra de estado
 const STATUS_BAR_HEIGHT = Platform.OS === 'ios' ? 44 : StatusBar.currentHeight || 0;
 // Padding adicional para asegurar que los elementos no se corten
