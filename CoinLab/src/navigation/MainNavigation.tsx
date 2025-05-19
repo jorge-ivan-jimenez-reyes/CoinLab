@@ -71,7 +71,7 @@ const MainNavigation = () => {
         options={{
           tabBarLabel: 'Ayuda',
           tabBarIcon: ({ color, size }) => (
-            <Ionicons name="help-circle-outline" color={color} size={size + 5} />
+            <Ionicons name="chatbox-outline" color={color} size={size + 5} />
           ),
         }}
       />
@@ -82,7 +82,7 @@ const MainNavigation = () => {
         options={{
           tabBarLabel: 'Historial',
           tabBarIcon: ({ color, size }) => (
-            <Ionicons name="time-outline" color={color} size={size + 5} />
+            <Ionicons name="book-outline" color={color} size={size + 5} />
           ),
         }}
       />
