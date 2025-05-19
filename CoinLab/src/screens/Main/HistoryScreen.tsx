@@ -1,5 +1,5 @@
 import React from 'react';
-import { StyleSheet, View, Text, FlatList } from 'react-native';
+import { StyleSheet, View, Text, FlatList, Image, TouchableOpacity } from 'react-native';
 import { Ionicons } from 'react-native-vector-icons';
 import COLORS from '../../theme/colors';
 import { IMAGES } from '../../assets/index';
@@ -7,268 +7,220 @@ import { ResponsiveScreenLayout } from '../../components/Layout';
 
 interface Transaction {
   id: string;
-  type: 'buy' | 'sell' | 'transfer';
-  coin: string;
+  agentName: string;
+  actionType: 'Venta' | 'Compra';
   amount: string;
-  price: string;
-  date: string;
-  status: 'completed' | 'pending' | 'failed';
+  cryptocurrency: string;
+  timestamp?: string;
 }
 
 const transactionData: Transaction[] = [
   {
     id: '1',
-    type: 'buy',
-    coin: 'Bitcoin',
-    amount: '0.05 BTC',
-    price: '$2,350',
-    date: '22/06/2023',
-    status: 'completed'
+    agentName: 'Agente 1',
+    actionType: 'Venta',
+    amount: '$20,000',
+    cryptocurrency: 'Bitcoin',
+    timestamp: '15 min ago'
   },
   {
     id: '2',
-    type: 'sell',
-    coin: 'Ethereum',
-    amount: '1.2 ETH',
-    price: '$1,860',
-    date: '20/06/2023',
-    status: 'completed'
+    agentName: 'Agente 1',
+    actionType: 'Compra',
+    amount: '$2,000',
+    cryptocurrency: 'Bitcoin',
+    timestamp: '30 min ago'
   },
   {
     id: '3',
-    type: 'transfer',
-    coin: 'USDT',
-    amount: '500 USDT',
-    price: '$500',
-    date: '18/06/2023',
-    status: 'completed'
+    agentName: 'Agente 1',
+    actionType: 'Venta',
+    amount: '$3,006.89',
+    cryptocurrency: 'Bitcoin',
+    timestamp: '1 hour ago'
   },
   {
     id: '4',
-    type: 'buy',
-    coin: 'Cardano',
-    amount: '500 ADA',
-    price: '$145',
-    date: '15/06/2023',
-    status: 'pending'
+    agentName: 'Agente 1',
+    actionType: 'Compra',
+    amount: '$20,000',
+    cryptocurrency: 'Etherium',
+    timestamp: '2 hours ago'
   },
   {
     id: '5',
-    type: 'sell',
-    coin: 'Solana',
-    amount: '10 SOL',
-    price: '$230',
-    date: '10/06/2023',
-    status: 'failed'
+    agentName: 'Agente 1',
+    actionType: 'Compra',
+    amount: '$2,000',
+    cryptocurrency: 'Etherium',
+    timestamp: '3 hours ago'
+  },
+  {
+    id: '6',
+    agentName: 'Agente 1',
+    actionType: 'Venta',
+    amount: '$3,006.89',
+    cryptocurrency: 'Bitcoin',
+    timestamp: '5 hours ago'
   }
 ];
 
 const HistoryScreen = () => {
-  const getIconName = (type: Transaction['type']) => {
-    switch (type) {
-      case 'buy': return 'arrow-down-outline';
-      case 'sell': return 'arrow-up-outline';
-      case 'transfer': return 'swap-horizontal-outline';
-      default: return 'help-outline';
-    }
-  };
-
-  const getIconColor = (type: Transaction['type']) => {
-    switch (type) {
-      case 'buy': return COLORS.success;
-      case 'sell': return COLORS.danger;
-      case 'transfer': return COLORS.primary;
-      default: return COLORS.mediumGray;
-    }
-  };
-
-  const getStatusColor = (status: Transaction['status']) => {
-    switch (status) {
-      case 'completed': return COLORS.success;
-      case 'pending': return COLORS.warning;
-      case 'failed': return COLORS.danger;
-      default: return COLORS.mediumGray;
-    }
-  };
-
   const renderTransactionItem = ({ item }: { item: Transaction }) => (
-    <View style={styles.transactionCard}>
-      <View style={styles.iconContainer}>
-        <Ionicons 
-          name={getIconName(item.type)} 
-          size={24} 
-          color={getIconColor(item.type)} 
-        />
-      </View>
-      
-      <View style={styles.transactionDetails}>
-        <View style={styles.transactionHeader}>
-          <Text style={styles.coinName}>{item.coin}</Text>
-          <Text style={styles.amount}>{item.amount}</Text>
-        </View>
-        
-        <View style={styles.transactionFooter}>
-          <Text style={styles.date}>{item.date}</Text>
-          <View style={styles.priceContainer}>
-            <Text style={styles.price}>{item.price}</Text>
-          </View>
+    <View style={styles.transactionRow}>
+      <View style={styles.agentSection}>
+        <Image source={IMAGES.USER_ICON} style={styles.agentIcon} />
+        <View style={styles.agentInfo}>
+          <Text style={styles.agentName}>{item.agentName}</Text>
+          <Text style={styles.actionType}>{item.actionType}</Text>
         </View>
       </View>
       
-      <View style={[styles.statusIndicator, {backgroundColor: getStatusColor(item.status)}]} />
+      <View style={styles.amountSection}>
+        <Text style={styles.amount}>{item.amount}</Text>
+        <Text style={styles.cryptocurrency}>{item.cryptocurrency}</Text>
+      </View>
     </View>
   );
 
-  const ListHeaderComponent = () => (
-    <View style={styles.filterContainer}>
-      <Text style={styles.filterTitle}>Filtros:</Text>
-      <View style={styles.filterPills}>
-        <View style={[styles.filterPill, styles.activePill]}>
-          <Text style={styles.activePillText}>Todos</Text>
-        </View>
-        <View style={styles.filterPill}>
-          <Text style={styles.pillText}>Compras</Text>
-        </View>
-        <View style={styles.filterPill}>
-          <Text style={styles.pillText}>Ventas</Text>
-        </View>
-      </View>
+  const HeaderComponent = () => (
+    <View style={styles.header}>
+      <Text style={styles.headerTitle}>Transacciones</Text>
+      {transactionData.length > 0 && (
+        <Text style={styles.lastUpdated}>
+          Actualizado: {transactionData[0].timestamp}
+        </Text>
+      )}
     </View>
   );
+  
+  const renderSeparator = () => <View style={styles.separator} />;
 
   return (
     <ResponsiveScreenLayout
-      title="Historial"
+      title="Historial de Transacciones"
       backgroundImage={IMAGES.CARD_BACKGROUND}
-      profit="Total Transacciones"
-      amount="256"
-      amountLabel="USD"
-      contentPadding={0}
+      profit="Total Operaciones"
+      amount={transactionData.length.toString()}
+      currencySymbol=""
+      disableColorChange={true}
     >
-      <FlatList
-        style={styles.flatList}
-        data={transactionData}
-        renderItem={renderTransactionItem}
-        keyExtractor={item => item.id}
-        contentContainerStyle={styles.listContainer}
-        showsVerticalScrollIndicator={false}
-        ListHeaderComponent={<ListHeaderComponent />}
-      />
+      <View style={styles.container}>
+        <FlatList
+          style={styles.flatList}
+          data={transactionData}
+          renderItem={renderTransactionItem}
+          keyExtractor={item => item.id}
+          contentContainerStyle={styles.listContainer}
+          showsVerticalScrollIndicator={false}
+          ListHeaderComponent={HeaderComponent}
+          ItemSeparatorComponent={renderSeparator}
+        />
+        <TouchableOpacity style={styles.addButton}>
+          <Ionicons name="add" size={36} color={COLORS.white} />
+        </TouchableOpacity>
+      </View>
     </ResponsiveScreenLayout>
   );
 };
 
 const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    width: '100%',
+    position: 'relative',
+  },
   flatList: {
     flex: 1,
     width: '100%',
     backgroundColor: COLORS.background,
-    borderWidth: 0,
-    borderTopWidth: 0,
   },
   listContainer: {
-    paddingHorizontal: 15,
-    paddingBottom: 60,
-    width: '100%',
-    borderWidth: 0,
-    borderTopWidth: 0,
-    paddingTop: 0,
-  },
-  filterContainer: {
-    marginBottom: 20,
-    width: '100%',
-    marginTop: 0,
-    borderWidth: 0,
-    borderTopWidth: 0,
-    paddingTop: 0,
-  },
-  filterTitle: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: COLORS.text,
-    marginBottom: 10,
-  },
-  filterPills: {
-    flexDirection: 'row',
-  },
-  filterPill: {
-    paddingHorizontal: 16,
-    paddingVertical: 6,
-    backgroundColor: COLORS.lightGray,
-    borderRadius: 20,
-    marginRight: 10,
-  },
-  activePill: {
-    backgroundColor: COLORS.primary,
-  },
-  pillText: {
-    color: COLORS.text,
-    fontWeight: '500',
-  },
-  activePillText: {
-    color: COLORS.white,
-    fontWeight: '500',
-  },
-  transactionCard: {
-    flexDirection: 'row',
-    backgroundColor: COLORS.lightGray,
-    borderRadius: 10,
-    padding: 12,
-    marginBottom: 10,
-    borderWidth: 1,
-    borderColor: COLORS.mediumGray,
-    alignItems: 'center',
+    paddingHorizontal: 20,
+    paddingBottom: 80,
     width: '100%',
   },
-  iconContainer: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: 'rgba(0,0,0,0.1)',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: 12,
-  },
-  transactionDetails: {
-    flex: 1,
-  },
-  transactionHeader: {
+  header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginBottom: 4,
+    alignItems: 'center',
+    marginBottom: 15,
+    marginTop: 15,
   },
-  coinName: {
-    fontSize: 16,
+  headerTitle: {
+    fontSize: 28,
     fontWeight: 'bold',
     color: COLORS.text,
   },
-  amount: {
-    fontSize: 16,
-    color: COLORS.text,
-  },
-  transactionFooter: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-  },
-  date: {
+  lastUpdated: {
     fontSize: 14,
     color: COLORS.textLight,
   },
-  priceContainer: {
+  transactionRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    paddingVertical: 15,
+    width: '100%',
+  },
+  agentSection: {
     flexDirection: 'row',
     alignItems: 'center',
   },
-  price: {
-    fontSize: 14,
-    fontWeight: '500',
+  agentIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: 5,
+    marginRight: 15,
+    resizeMode: 'contain',
+  },
+  agentInfo: {
+    justifyContent: 'center',
+  },
+  agentName: {
+    fontSize: 20,
+    fontWeight: 'bold',
     color: COLORS.text,
+    marginBottom: 4,
   },
-  statusIndicator: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    marginLeft: 10,
+  actionType: {
+    fontSize: 16,
+    color: COLORS.textLight,
   },
+  amountSection: {
+    alignItems: 'flex-end',
+    justifyContent: 'center',
+  },
+  amount: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: COLORS.text,
+    marginBottom: 4,
+  },
+  cryptocurrency: {
+    fontSize: 16,
+    color: COLORS.textLight,
+  },
+  separator: {
+    height: 1,
+    backgroundColor: COLORS.lightGray,
+    width: '100%',
+  },
+  addButton: {
+    position: 'absolute',
+    bottom: 20,
+    alignSelf: 'center',
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    backgroundColor: '#171717',
+    alignItems: 'center',
+    justifyContent: 'center',
+    elevation: 5,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 3,
+  }
 });
 
 export default HistoryScreen; 
