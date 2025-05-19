@@ -87,9 +87,11 @@ const HistoryScreen = () => {
     <View style={styles.header}>
       <Text style={styles.headerTitle}>Transacciones</Text>
       {transactionData.length > 0 && (
-        <Text style={styles.lastUpdated}>
-          Actualizado: {transactionData[0].timestamp}
-        </Text>
+        <View style={styles.updatedContainer}>
+          <Text style={styles.lastUpdated}>
+            Actualizado: {transactionData[0].timestamp}
+          </Text>
+        </View>
       )}
     </View>
   );
@@ -151,6 +153,12 @@ const styles = StyleSheet.create({
     fontSize: 28,
     fontWeight: 'bold',
     color: COLORS.text,
+    marginRight: 10,
+  },
+  updatedContainer: {
+    flex: 1,
+    alignItems: 'flex-end',
+    marginLeft: 15,
   },
   lastUpdated: {
     fontSize: 14,
