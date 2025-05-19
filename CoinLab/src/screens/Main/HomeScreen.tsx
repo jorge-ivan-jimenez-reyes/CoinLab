@@ -288,10 +288,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   userIcon: {
-    width: 45,
-    height: 45,
+    width: 40,
+    height: 40,
     marginRight: 15,
-    borderRadius: 22.5,
+    borderRadius: 5,
+    resizeMode: 'contain',
   },
   movementInfo: {
     justifyContent: 'center',
