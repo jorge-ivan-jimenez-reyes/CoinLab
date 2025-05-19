@@ -48,6 +48,10 @@ const AgentDetailScreen = () => {
   const dataPointsRef = useRef<number[]>([]);
   const labelsRef = useRef<string[]>([]);
   
+  // Markers for buy/sell points
+  const [buyPoints, setBuyPoints] = useState<number[]>([]);
+  const [sellPoints, setSellPoints] = useState<number[]>([]);
+  
   // Cleanup timer on unmount
   useEffect(() => {
     return () => {
@@ -73,6 +77,8 @@ const AgentDetailScreen = () => {
     const initializeChartData = () => {
       let dataPoints: number[] = [];
       let labels: string[] = [];
+      let newBuyPoints: number[] = [];
+      let newSellPoints: number[] = [];
       
       // Generate different data points based on the selected period
       switch(selectedPeriod) {
@@ -128,6 +134,26 @@ const AgentDetailScreen = () => {
         labels,
         datasets: [{ data: dataPoints }]
       });
+      
+      // Set buy/sell points (simulated trading signals)
+      // Generate 1-2 buy points and 1-2 sell points at strategic locations
+      const randomIndex1 = Math.floor(dataPoints.length * 0.3); // Around 30% mark
+      const randomIndex2 = Math.floor(dataPoints.length * 0.7); // Around 70% mark
+      
+      if (dataPoints[randomIndex1] < dataPoints[randomIndex1 + 1]) {
+        newBuyPoints.push(randomIndex1);
+      } else {
+        newSellPoints.push(randomIndex1);
+      }
+      
+      if (dataPoints[randomIndex2] > dataPoints[randomIndex2 - 1]) {
+        newSellPoints.push(randomIndex2);
+      } else {
+        newBuyPoints.push(randomIndex2);
+      }
+      
+      setBuyPoints(newBuyPoints);
+      setSellPoints(newSellPoints);
       
       // Set current price to the last data point
       const lastPrice = dataPoints[dataPoints.length - 1];
@@ -251,21 +277,30 @@ const AgentDetailScreen = () => {
   
   // Chart configuration
   const chartConfig = {
-    backgroundGradientFrom: '#1E2129',
-    backgroundGradientTo: '#1E2129',
+    backgroundGradientFrom: '#1E1E24',
+    backgroundGradientTo: '#1E1E24',
+    backgroundGradientFromOpacity: 1,
+    backgroundGradientToOpacity: 1,
     decimalPlaces: 0,
-    color: (opacity = 1) => `rgba(49, 208, 170, ${opacity})`,
-    labelColor: (opacity = 1) => `rgba(255, 255, 255, ${opacity})`,
+    color: (opacity = 1) => `rgba(0, 255, 171, ${opacity})`,
+    labelColor: (opacity = 1) => `rgba(255, 255, 255, ${opacity * 0.6})`,
     style: {
       borderRadius: 16,
     },
     propsForDots: {
-      r: '3',
+      r: '2',
       strokeWidth: '1',
-      stroke: '#31D0AA',
+      stroke: '#00ffa8',
     },
     propsForBackgroundLines: {
-      stroke: 'rgba(255, 255, 255, 0.1)',
+      stroke: 'rgba(50, 50, 60, 0.8)',
+      strokeDasharray: '5, 5',
+    },
+    propsForVerticalLabels: {
+      fontSize: 10,
+    },
+    propsForHorizontalLabels: {
+      fontSize: 10,
     },
   };
   
@@ -300,6 +335,18 @@ const AgentDetailScreen = () => {
           
           {/* Chart component */}
           <View style={styles.chartContainer}>
+            {/* Buy/Sell markers */}
+            <View style={styles.chartLegendContainer}>
+              <View style={styles.chartLegendItem}>
+                <View style={[styles.legendDot, styles.buyDot]} />
+                <Text style={styles.chartLegendText}>Compra</Text>
+              </View>
+              <View style={styles.chartLegendItem}>
+                <View style={[styles.legendDot, styles.sellDot]} />
+                <Text style={styles.chartLegendText}>Venta</Text>
+              </View>
+            </View>
+            
             <LineChart
               data={chartData}
               width={screenWidth - 40}
@@ -308,13 +355,65 @@ const AgentDetailScreen = () => {
               bezier
               withInnerLines={true}
               withOuterLines={false}
-              withVerticalLines={false}
+              withVerticalLines={true}
               withHorizontalLines={true}
               withVerticalLabels={true}
               withHorizontalLabels={true}
               withShadow={false}
               yAxisSuffix=""
               style={styles.chart}
+              formatYLabel={(value) => {
+                // Format large numbers with K suffix
+                const num = parseFloat(value);
+                if (num >= 1000) {
+                  return (num/1000).toFixed(1) + 'K';
+                }
+                return value;
+              }}
+              segments={5}
+              hidePointsAtIndex={[]}
+              decorator={() => {
+                return buyPoints.concat(sellPoints).map((pointIndex, index) => {
+                  const isBuy = buyPoints.includes(pointIndex);
+                  
+                  // Calculate positions
+                  const x = (pointIndex / (chartData.labels.length - 1)) * (screenWidth - 60) + 30;
+                  const dataPoint = chartData.datasets[0].data[pointIndex];
+                  
+                  // Normalize y position (inverse of how chart library does it)
+                  const dataMax = Math.max(...chartData.datasets[0].data);
+                  const dataMin = Math.min(...chartData.datasets[0].data);
+                  const dataRange = dataMax - dataMin;
+                  const normalizedY = 1 - ((dataPoint - dataMin) / dataRange);
+                  
+                  // Chart height minus padding
+                  const chartHeight = 190;
+                  const y = normalizedY * chartHeight + 15;
+                  
+                  return (
+                    <View key={index}>
+                      <View
+                        style={[
+                          styles.tradeMarker,
+                          { top: y - 25, left: x - 15 },
+                          isBuy ? styles.buyMarker : styles.sellMarker
+                        ]}
+                      >
+                        <Text style={styles.markerText}>
+                          {isBuy ? 'BUY' : 'SELL'}
+                        </Text>
+                      </View>
+                      <View
+                        style={[
+                          styles.markerDot,
+                          { top: y - 3, left: x - 3 },
+                          isBuy ? styles.buyDot : styles.sellDot
+                        ]}
+                      />
+                    </View>
+                  );
+                });
+              }}
             />
             
             {/* Time period selector */}
@@ -470,39 +569,49 @@ const styles = StyleSheet.create({
   },
   chartContainer: {
     width: '100%',
-    backgroundColor: '#1E2129',
+    backgroundColor: '#1E1E24',
     borderRadius: 10,
     overflow: 'hidden',
     marginBottom: 20,
-    paddingVertical: 10,
-    paddingHorizontal: 5,
+    paddingVertical: 15,
+    paddingHorizontal: 10,
+    elevation: 3,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 3,
+    borderWidth: 1,
+    borderColor: 'rgba(50, 50, 60, 0.5)',
   },
   chart: {
     marginHorizontal: -10,
     borderRadius: 10,
+    paddingRight: 10,
   },
   periodSelector: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
+    justifyContent: 'space-around',
     paddingHorizontal: 10,
-    paddingVertical: 10,
-    marginTop: 10,
+    paddingVertical: 15,
+    marginTop: 5,
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(50, 50, 60, 0.5)',
   },
   periodButton: {
-    paddingVertical: 5,
-    paddingHorizontal: 8,
+    paddingVertical: 6,
+    paddingHorizontal: 10,
     borderRadius: 4,
   },
   activePeriodButton: {
-    backgroundColor: 'rgba(49, 208, 170, 0.2)',
+    backgroundColor: 'rgba(0, 255, 171, 0.15)',
   },
   periodButtonText: {
-    color: 'rgba(255, 255, 255, 0.6)',
+    color: 'rgba(255, 255, 255, 0.5)',
     fontSize: 12,
     fontWeight: 'bold',
   },
   activePeriodButtonText: {
-    color: '#31D0AA',
+    color: '#00ffa8',
   },
   metricsContainer: {
     width: '100%',
@@ -599,6 +708,57 @@ const styles = StyleSheet.create({
   statusText: {
     fontSize: 14,
     fontWeight: 'bold',
+  },
+  chartLegendContainer: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    paddingHorizontal: 15,
+    marginBottom: 10,
+  },
+  chartLegendItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginLeft: 15,
+  },
+  chartLegendText: {
+    color: 'rgba(255, 255, 255, 0.7)',
+    fontSize: 12,
+  },
+  legendDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    marginRight: 5,
+  },
+  buyDot: {
+    backgroundColor: '#00ffa8',
+  },
+  sellDot: {
+    backgroundColor: '#ff4976',
+  },
+  tradeMarker: {
+    position: 'absolute',
+    paddingVertical: 2,
+    paddingHorizontal: 6,
+    borderRadius: 4,
+    elevation: 3,
+  },
+  buyMarker: {
+    backgroundColor: 'rgba(0, 255, 168, 0.9)',
+  },
+  sellMarker: {
+    backgroundColor: 'rgba(255, 73, 118, 0.9)',
+  },
+  markerText: {
+    color: '#000',
+    fontSize: 10,
+    fontWeight: 'bold',
+  },
+  markerDot: {
+    position: 'absolute',
+    width: 6,
+    height: 6,
+    borderRadius: 3,
   },
 });
 
