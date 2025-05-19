@@ -73,8 +73,8 @@ const HelpScreen: React.FC = () => {
   };
 
   const handleNavigation = (screenName: string, params: any) => {
-    // Navigation would be implemented here in a real app
-    console.log(`Navigate to ${screenName} with params:`, params);
+    // @ts-ignore: Navigate to detail screen
+    navigation.navigate(screenName, params);
   };
 
   return (
@@ -132,12 +132,24 @@ const HelpScreen: React.FC = () => {
         isOpen={openSections.banking}
         toggleOpen={() => toggleSection('banking')}
       >
-        <TouchableOpacity style={styles.questionButton}>
+        <TouchableOpacity 
+          style={styles.questionButton}
+          onPress={() => handleNavigation('HelpDetail', { 
+            title: 'Información Bancaria', 
+            questionId: 'banking-add-account' 
+          })}
+        >
           <Text style={styles.questionText}>¿Cómo agregar mi cuenta bancaria?</Text>
           <Ionicons name="chevron-forward" size={24} color={COLORS.text} />
         </TouchableOpacity>
         
-        <TouchableOpacity style={styles.questionButton}>
+        <TouchableOpacity 
+          style={styles.questionButton}
+          onPress={() => handleNavigation('HelpDetail', { 
+            title: 'Información Bancaria', 
+            questionId: 'banking-transfers' 
+          })}
+        >
           <Text style={styles.questionText}>Transferencias y retiros</Text>
           <Ionicons name="chevron-forward" size={24} color={COLORS.text} />
         </TouchableOpacity>
@@ -148,12 +160,24 @@ const HelpScreen: React.FC = () => {
         isOpen={openSections.security}
         toggleOpen={() => toggleSection('security')}
       >
-        <TouchableOpacity style={styles.questionButton}>
+        <TouchableOpacity 
+          style={styles.questionButton}
+          onPress={() => handleNavigation('HelpDetail', { 
+            title: 'Seguridad', 
+            questionId: 'security-protect' 
+          })}
+        >
           <Text style={styles.questionText}>¿Cómo proteger mi cuenta?</Text>
           <Ionicons name="chevron-forward" size={24} color={COLORS.text} />
         </TouchableOpacity>
         
-        <TouchableOpacity style={styles.questionButton}>
+        <TouchableOpacity 
+          style={styles.questionButton}
+          onPress={() => handleNavigation('HelpDetail', { 
+            title: 'Seguridad', 
+            questionId: 'security-2fa' 
+          })}
+        >
           <Text style={styles.questionText}>Autenticación de dos factores</Text>
           <Ionicons name="chevron-forward" size={24} color={COLORS.text} />
         </TouchableOpacity>
