@@ -1,5 +1,5 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ImageBackground, Dimensions, Animated, Platform, PanResponder, StatusBar, SafeAreaView, ScrollView, Easing } from 'react-native';
+import React, { useState, useRef, useEffect, useMemo, useCallback } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity, ImageBackground, Dimensions, Animated, Platform, PanResponder, StatusBar, SafeAreaView, ScrollView, Easing, Image, InteractionManager } from 'react-native';
 import { Ionicons } from 'react-native-vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -10,18 +10,18 @@ import { useAuth } from '../../context/AuthContext';
 // Obtener las dimensiones de la pantalla y ajustar dinámicamente
 const { width, height } = Dimensions.get('window');
 
-// Definimos los colores para el gradiente - Fondo negro 
-const GRADIENT_COLORS = ['#171717', '#171717', '#171717'] as const;
-const BACKGROUND_COLOR = '#171717';
+// Definimos los colores para el gradiente - Fondo oscuro para coincidir con el diseño
+const GRADIENT_COLORS = ['rgba(30, 30, 36, 0.9)', 'rgba(30, 30, 36, 0.95)', 'rgba(30, 30, 36, 1)'] as const;
+const BACKGROUND_COLOR = '#1E1E24';
 
 // Manejo del espacio superior para distintas plataformas
 const IS_IOS = Platform.OS === 'ios';
-const NOTCH_SPACE = IS_IOS ? 50 : StatusBar.currentHeight || 0; // Aumentar para evitar el notch
+const NOTCH_SPACE = IS_IOS ? 50 : StatusBar.currentHeight || 0; // Aumentar más el espacio para el notch
 
-// Ajustar alturas basadas en el tamaño de la pantalla - Más compactas
-const COLLAPSED_HEIGHT = Math.min(height * 0.12, 105) + NOTCH_SPACE; // Aumentar altura cuando contraído
-const EXPANDED_HEIGHT = height * 0.39 + NOTCH_SPACE; // Aumentar un poco para el modo expandido
-const DRAG_THRESHOLD = 20; 
+// Ajustar alturas basadas en el tamaño de la pantalla - Más espacio vertical
+const COLLAPSED_HEIGHT = Math.min(height * 0.12, 110) + NOTCH_SPACE; // Aumentar altura cuando está contraído
+const EXPANDED_HEIGHT = height * 0.39 + NOTCH_SPACE; // Mantener para modo expandido
+const DRAG_THRESHOLD = 20;
 
 // Valor fijo para el border radius
 const BORDER_RADIUS = 35; // Valor intermedio más equilibrado
@@ -30,16 +30,17 @@ const BORDER_RADIUS = 35; // Valor intermedio más equilibrado
 const SPRING_CONFIG = {
   friction: 8,     
   tension: 40,     
-  useNativeDriver: false // Desactivar native driver para todas las animaciones
+  useNativeDriver: false // Height animations require useNativeDriver: false
 };
 
 const TIMING_CONFIG = {
-  duration: 200,
-  useNativeDriver: false // Desactivar native driver para todas las animaciones
+  duration: 300,
+  useNativeDriver: false // Height animations require useNativeDriver: false
 };
 
-// Importar la imagen de fondo por defecto
+// Importar la imagen de fondo por defecto y la imagen de puntos
 const DEFAULT_BACKGROUND_IMAGE = require('../../assets/card.png');
+const DOTS_IMAGE = require('../../assets/componente.png');
 
 interface HeaderCardProps {
   title?: string;
@@ -72,12 +73,12 @@ const HeaderCard: React.FC<HeaderCardProps> = ({
 }) => {
   const navigation = useNavigation<any>();
   // Usar el contexto global en lugar del estado local
-  const { isHeaderExpanded, toggleHeader } = useHeader();
+  const { isHeaderExpanded, toggleHeader, isTransitioning } = useHeader();
   const { isAuthenticated } = useAuth();
   // Mantenemos una referencia al estado expandido del contexto
   const expanded = isHeaderExpanded;
   
-  // Crear todas las referencias de animación con useNativeDriver: false explícitamente
+  // Crear todas las referencias de animación con useNativeDriver: false para animar altura
   const heightAnim = useRef(new Animated.Value(expanded ? EXPANDED_HEIGHT : COLLAPSED_HEIGHT)).current;
   const lastNotifiedHeight = useRef(expanded ? EXPANDED_HEIGHT : COLLAPSED_HEIGHT);
   const isAnimating = useRef(false);
@@ -89,25 +90,39 @@ const HeaderCard: React.FC<HeaderCardProps> = ({
   // Opacidad animada para la información financiera
   const infoOpacity = useRef(new Animated.Value(expanded ? 1 : 0)).current;
   
+  // Memoizar la altura para minimizar recálculos
+  const targetHeight = useMemo(() => 
+    expanded ? EXPANDED_HEIGHT : COLLAPSED_HEIGHT,
+  [expanded]);
+
+  // Calcular valores animados para mejorar el efecto visual
+  const scaleAnim = useRef(new Animated.Value(expanded ? 1 : 0.98)).current;
+  const borderRadiusAnim = useRef(new Animated.Value(BORDER_RADIUS)).current;
+  
   // Notificar altura actual al padre - evitar notificaciones innecesarias
-  const notifyHeightChange = (height: number) => {
+  const notifyHeightChange = useCallback((height: number) => {
     if (initialRender.current || 
         (onHeightChange && Math.abs(lastNotifiedHeight.current - height) > 2)) {
       lastNotifiedHeight.current = height;
       
       if (onHeightChange) {
-        onHeightChange(height);
+        requestAnimationFrame(() => {
+          onHeightChange(height);
+        });
       }
       
       initialRender.current = false;
     }
-  };
+  }, [onHeightChange]);
   
-  // Configurar el PanResponder para manejar gestos de arrastre
-  const panResponder = useRef(
+  // Configurar el PanResponder para manejar gestos de arrastre - deshabilitar durante transiciones
+  const panResponder = useMemo(() => 
     PanResponder.create({
-      onStartShouldSetPanResponder: () => true,
+      onStartShouldSetPanResponder: () => !isTransitioning,
       onMoveShouldSetPanResponder: (_, gestureState) => {
+        // No responder a gestos durante la transición
+        if (isTransitioning) return false;
+        
         // Responder más rápido a los movimientos verticales
         return Math.abs(gestureState.dy) > 3; 
       },
@@ -124,6 +139,9 @@ const HeaderCard: React.FC<HeaderCardProps> = ({
         dragY.setValue(drag); 
       },
       onPanResponderRelease: (_, gestureState) => {
+        // No procesar el gesto si estamos en transición
+        if (isTransitioning) return;
+        
         // Resetear valor de arrastre inmediatamente
         dragY.setValue(0);
         
@@ -136,9 +154,6 @@ const HeaderCard: React.FC<HeaderCardProps> = ({
         const shouldCollapse = expanded && 
           (gestureState.dy > distanceThreshold || gestureState.vy > velocityThreshold);
         
-        console.log(`Gesto completado: ${shouldExpand ? 'expandir' : shouldCollapse ? 'contraer' : 'mantener'}, 
-          velocidad: ${gestureState.vy.toFixed(2)}, distancia: ${gestureState.dy.toFixed(2)}`);
-        
         if (shouldExpand) {
           toggleHeader(true);
         } else if (shouldCollapse) {
@@ -147,14 +162,14 @@ const HeaderCard: React.FC<HeaderCardProps> = ({
           resetToCurrentState();
         }
       },
-    })
-  ).current;
+    }),
+  [expanded, toggleHeader, isTransitioning]);
 
   // Inicializar el componente
   useEffect(() => {
     // Ocultar barra de estado para extenderse hasta arriba
     if (hideStatusBar) {
-      StatusBar.setHidden(true);
+      StatusBar.setHidden(true, 'fade');
     } else {
       StatusBar.setBarStyle('light-content');
       if (Platform.OS === 'android') {
@@ -163,9 +178,11 @@ const HeaderCard: React.FC<HeaderCardProps> = ({
       }
     }
 
+    // Pre-cargar la altura para evitar el destello negro
+    heightAnim.setValue(expanded ? EXPANDED_HEIGHT : COLLAPSED_HEIGHT);
+
     // Notificar altura inicial y estado expandido basado en el contexto global
-    const initialHeight = expanded ? EXPANDED_HEIGHT : COLLAPSED_HEIGHT;
-    notifyHeightChange(initialHeight);
+    notifyHeightChange(targetHeight);
     
     // Informar al componente padre sobre el estado actual
     if (onExpand) {
@@ -178,67 +195,98 @@ const HeaderCard: React.FC<HeaderCardProps> = ({
       const newCollapsed = Math.min(newHeight * 0.08, 70) + NOTCH_SPACE;
       const newExpanded = newHeight * 0.38 + NOTCH_SPACE;
       
-      const targetHeight = expanded ? newExpanded : newCollapsed;
-      heightAnim.setValue(targetHeight);
+      const newTargetHeight = expanded ? newExpanded : newCollapsed;
       
-      notifyHeightChange(targetHeight);
+      // Use LayoutAnimation for smoother transitions when dimensions change
+      Animated.timing(heightAnim, {
+        toValue: newTargetHeight,
+        duration: 0, // Instant update for dimension changes
+        useNativeDriver: false // Height animations require useNativeDriver: false
+      }).start();
+      
+      notifyHeightChange(newTargetHeight);
     };
     
-    Dimensions.addEventListener('change', handleDimensionsChange);
+    const dimensionListener = Dimensions.addEventListener('change', handleDimensionsChange);
     
     return () => {
-      // Restaurar barra de estado al desmontar
-      if (hideStatusBar) {
-        StatusBar.setHidden(false);
-      }
+      // Remove listener properly
+      dimensionListener.remove();
+      
+      // No restauramos la barra de estado al desmontar para evitar parpadeos
     };
-  }, [hideStatusBar, expanded]);
+  }, [hideStatusBar, expanded, notifyHeightChange, targetHeight, onExpand]);
+
+  // Asegurar que la barra de estado permanezca oculta durante las transiciones
+  useEffect(() => {
+    // En iOS, asegurarnos de que la barra sigue oculta durante transiciones
+    StatusBar.setHidden(true, 'fade');
+  }, [isTransitioning]);
 
   // Animar directamente los cambios de altura cuando cambia el estado
   useEffect(() => {
-    console.log(`Actualizando altura con estado: ${expanded ? 'expandido' : 'contraído'}`);
-    const targetHeight = expanded ? EXPANDED_HEIGHT : COLLAPSED_HEIGHT;
+    const newTargetHeight = targetHeight;
     
-    // Iniciar una nueva animación de altura con prioridad sobre cualquier otra
+    // No iniciar una nueva animación si ya está en transición
+    if (isAnimating.current) return;
+    
     isAnimating.current = true;
+
+    // Configurar animación con reatardo cero para evitar parpadeos
+    const config = {
+      toValue: newTargetHeight,
+      duration: 300, // Reducir la duración para una animación más rápida 
+      useNativeDriver: false, // Height animations require useNativeDriver: false
+      delay: 0,
+      isInteraction: true,
+    };
+
+    // Usar InteractionManager para evitar problemas de renderizado
+    InteractionManager.runAfterInteractions(() => {
+      // Usar Animated.timing para una respuesta más precisa y predecible
+      const heightAnimation = Animated.timing(heightAnim, config);
     
-    // Usar Animated.timing para una respuesta más precisa y predecible
-    Animated.timing(heightAnim, {
-      toValue: targetHeight,
-      duration: 300, // Duración un poco mayor para una transición más suave
-      easing: Easing.bezier(0.25, 0.1, 0.25, 1), // Curva de aceleración suave
-      useNativeDriver: false
-    }).start(() => {
-      isAnimating.current = false;
-      console.log(`Animación de altura completada: ${targetHeight}`);
+      // Animar la opacidad de la información
+      const opacityAnimation = Animated.timing(infoOpacity, {
+        toValue: expanded ? 1 : 0,
+        duration: 250, // Hacer más rápida la transición de opacidad
+        useNativeDriver: false, // Set to false for consistency
+        delay: 0
+      });
+
+      // Animar la escala para el efecto visual
+      const scaleAnimation = Animated.timing(scaleAnim, {
+        toValue: expanded ? 1 : 0.98,
+        duration: 300,
+        useNativeDriver: false, // Set to false for consistency
+      });
+    
+      // Ejecutar animaciones en paralelo para mejor efecto visual
+      Animated.parallel([
+        heightAnimation,
+        opacityAnimation,
+        scaleAnimation
+      ]).start(() => {
+        isAnimating.current = false;
+        notifyHeightChange(newTargetHeight);
+      });
     });
-  }, [expanded]);
-  
-  // Notificar cambios y animar opacidad cuando cambia el estado
-  useEffect(() => {
-    // Animar la opacidad de la información de forma independiente - más rápida
-    Animated.timing(infoOpacity, {
-      toValue: expanded ? 1 : 0,
-      duration: 200, // Aumentar la duración para una transición más suave
-      easing: Easing.linear, // Lineal para cambio de opacidad
-      useNativeDriver: false
-    }).start();
-  }, [expanded]);
+    
+  }, [expanded, targetHeight, notifyHeightChange, scaleAnim]);
 
-  const resetToCurrentState = () => {
-    console.log(`Manteniendo estado actual: ${expanded ? 'expandido' : 'contraído'}`);
-  };
+  const resetToCurrentState = useCallback(() => {
+    // Stay at current state, no change needed
+  }, []);
 
-  const handleBackPress = () => {
+  const handleBackPress = useCallback(() => {
     if (onBackPress) {
       onBackPress();
     } else if (navigation.canGoBack()) {
       navigation.goBack();
     }
-  };
+  }, [navigation, onBackPress]);
 
-  const handleProfilePress = () => {
-    console.log('Navegar al perfil');
+  const handleProfilePress = useCallback(() => {
     if (!isAuthenticated) {
       navigation.reset({
         index: 0,
@@ -248,121 +296,166 @@ const HeaderCard: React.FC<HeaderCardProps> = ({
       // Aquí puedes agregar navegación al perfil cuando se implemente
       // navigation.navigate('Profile');
     }
-  };
+  }, [navigation, isAuthenticated]);
   
-  // Calcular altura dinámica basada en arrastre
-  const dynamicHeight = Animated.add(
-    heightAnim,
-    dragY.interpolate({
-      inputRange: [-50, 0, 50],
-      outputRange: [25, 0, -25],
-      extrapolate: 'clamp',
-    })
-  );
+  // Calcular altura dinámica basada en arrastre - desactivar durante transiciones
+  const dynamicHeight = useMemo(() => {
+    if (isTransitioning) {
+      return heightAnim; // Durante la transición, usar solo la altura animada, sin drag
+    }
+    
+    // Use layout-only animation for height
+    return Animated.add(
+      heightAnim,
+      dragY.interpolate({
+        inputRange: [-50, 0, 50],
+        outputRange: [25, 0, -25],
+        extrapolate: 'clamp',
+      })
+    );
+  }, [heightAnim, dragY, isTransitioning]);
   
   // Componentes Animados
   const AnimatedImageBackground = Animated.createAnimatedComponent(ImageBackground);
   const AnimatedLinearGradient = Animated.createAnimatedComponent(LinearGradient);
 
-  // Debug para ver si la imagen se está cargando correctamente
-  useEffect(() => {
-    console.log("Background Image Source:", backgroundImage);
-    console.log("Background Image Type:", typeof backgroundImage);
-  }, [backgroundImage]);
-
   // Función para cambiar el estado usando el contexto global
-  const toggleExpanded = (newExpanded = !expanded) => {
-    // Si ya estamos en el estado deseado, no hacemos nada
-    if (newExpanded === expanded) return;
-    
-    // Incluso si estamos animando, permitimos cambiar el estado para mayor responsividad
-    console.log(`Cambiando estado local a: ${newExpanded ? 'expandido' : 'contraído'}`);
-    
-    // Detener cualquier animación en curso
-    heightAnim.stopAnimation();
-    infoOpacity.stopAnimation();
-    
-    // Forzar valores inmediatos para una respuesta más rápida
-    const targetHeight = newExpanded ? EXPANDED_HEIGHT : COLLAPSED_HEIGHT;
-    const targetOpacity = newExpanded ? 1 : 0;
-    
-    // Notificar inmediatamente para evitar retrasos en la interfaz
-    if (onExpand) {
-      onExpand(newExpanded);
-    }
-    notifyHeightChange(targetHeight);
+  const toggleExpanded = useCallback((newExpanded = !expanded) => {
+    // Si ya estamos en el estado deseado o en transición, no hacemos nada
+    if (newExpanded === expanded || isTransitioning) return;
     
     // Usar el toggleHeader del contexto para cambiar el estado global
     toggleHeader(newExpanded);
-  };
+  }, [expanded, toggleHeader, isTransitioning]);
+
+  // Memoizar el estilo de contenedor para evitar recálculos frecuentes
+  const containerStyle = useMemo(() => [
+    styles.absoluteContainer,
+    { 
+      height: dynamicHeight, // Height animation requires useNativeDriver: false
+      shadowOpacity: 0,
+      borderBottomLeftRadius: BORDER_RADIUS, // Mantener bordes redondeados siempre
+      borderBottomRightRadius: BORDER_RADIUS, // Mantener bordes redondeados siempre
+      borderBottomWidth: 0,
+      borderWidth: 0,
+      backgroundColor: BACKGROUND_COLOR, // Añadir color de fondo aquí también
+      overflow: 'hidden' as const, // Asegurar que no se desborde el contenido
+    } 
+  ], [dynamicHeight]);
+
+  // Memoizar el estilo del contenedor de la tarjeta
+  const animatedCardStyle = useMemo(() => [
+    styles.cardContainer, 
+    { 
+      height: dynamicHeight, // Height animation requires useNativeDriver: false
+      backgroundColor: BACKGROUND_COLOR,
+      borderBottomLeftRadius: BORDER_RADIUS, // Mantener bordes redondeados siempre
+      borderBottomRightRadius: BORDER_RADIUS, // Mantener bordes redondeados siempre
+      transform: [
+        { scale: scaleAnim }
+      ],
+      opacity: 1, // Asegurar que sea visible siempre
+    }
+  ], [dynamicHeight, scaleAnim]);
+
+  // Memoizar el estilo de la sección superior
+  const topSectionStyle = useMemo(() => [
+    styles.topSection,
+    expanded ? styles.expandedTopSection : styles.collapsedTopSection
+  ], [expanded]);
+
+  // Memoizar el estilo del contenedor financiero
+  const financialContainerStyle = useMemo(() => [
+    styles.financialInfoContainer,
+    expanded ? styles.expandedFinancialContainer : styles.collapsedFinancialContainer,
+    { opacity: infoOpacity }
+  ], [expanded, infoOpacity]);
+
+  // Memoizar la posición de los puntos basada en el estado expandido
+  const dotsStyle = useMemo(() => [
+    styles.dotsImage,
+    expanded ? styles.dotsExpandedPosition : styles.dotsCollapsedPosition
+  ], [expanded]);
+
+  // Memoizar el estilo del gradiente
+  const gradientStyle = useMemo(() => [
+    styles.gradientOverlay,
+    {
+      borderBottomLeftRadius: BORDER_RADIUS,
+      borderBottomRightRadius: BORDER_RADIUS
+    }
+  ], []);
 
   return (
-    <Animated.View 
-      style={[
-        styles.absoluteContainer,
-        { 
-          height: dynamicHeight,
-          shadowOpacity: 0,
-          borderBottomLeftRadius: BORDER_RADIUS,
-          borderBottomRightRadius: BORDER_RADIUS,
-          borderBottomWidth: 0,
-          borderWidth: 0
-        } 
-      ]}
-    >
+    <Animated.View style={containerStyle}>
       <TouchableOpacity
-        activeOpacity={0.8}
+        activeOpacity={0.9}
         delayPressIn={0}
-        style={styles.fullTouchContainer}
+        style={[styles.fullTouchContainer, { backgroundColor: BACKGROUND_COLOR }]}
         {...panResponder.panHandlers}
-        onPress={() => {
-          console.log('Toque directo detectado');
-          toggleExpanded();
-        }}
+        onPress={() => !isTransitioning && toggleExpanded()}
+        disabled={isTransitioning}
       >
-        <AnimatedImageBackground
-          source={backgroundImage || DEFAULT_BACKGROUND_IMAGE}
-          style={[styles.cardContainer, { height: dynamicHeight }]}
-          imageStyle={styles.backgroundImage}
-          resizeMode="cover"
-        >
-          {/* Semi-transparent overlay for better text readability */}
-          <View style={styles.overlay} />
+        <Animated.View style={animatedCardStyle}>
+          {/* Garantizar que el fondo sea consistente */}
+          <View style={[styles.solidBackground, { backgroundColor: BACKGROUND_COLOR }]} />
+          
+          {/* Imagen de puntos */}
+          <Image 
+            source={DOTS_IMAGE} 
+            style={dotsStyle} 
+            resizeMode="contain"
+          />
+          
+          {/* Gradiente para mejorar la visualización */}
+          <LinearGradient
+            colors={GRADIENT_COLORS}
+            style={gradientStyle}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 0, y: 1 }}
+          />
+          
           <View style={styles.contentWrapper}>
             <View style={styles.innerContent}>
-              <View style={[
-                styles.topSection,
-                expanded ? styles.expandedTopSection : styles.collapsedTopSection
-              ]}>
+              <View style={topSectionStyle}>
                 <View style={styles.leftSection}>
                   {showBackButton && (
-                    <TouchableOpacity style={styles.navButton} onPress={handleBackPress}>
-                      <Ionicons name="chevron-back" size={24} color={COLORS.white} />
+                    <TouchableOpacity 
+                      style={styles.navButton} 
+                      onPress={handleBackPress}
+                      disabled={isTransitioning}
+                    >
+                      <Ionicons name="chevron-back" size={expanded ? 26 : 24} color={COLORS.white} />
                     </TouchableOpacity>
                   )}
                   
-                  <TouchableOpacity style={styles.navButton}>
-                    <Ionicons name="card-outline" size={24} color={COLORS.white} />
+                  <TouchableOpacity 
+                    style={styles.navButton}
+                    disabled={isTransitioning}
+                  >
+                    <Ionicons name="card-outline" size={expanded ? 26 : 24} color={COLORS.white} />
                   </TouchableOpacity>
                   
-                  <TouchableOpacity style={styles.navButton}>
-                    <Ionicons name="eye-outline" size={24} color={COLORS.white} />
+                  <TouchableOpacity 
+                    style={styles.navButton}
+                    disabled={isTransitioning}
+                  >
+                    <Ionicons name="eye-outline" size={expanded ? 26 : 24} color={COLORS.white} />
                   </TouchableOpacity>
                 </View>
                 
                 <View style={styles.rightSection}>
-                  <TouchableOpacity style={styles.profileButton} onPress={handleProfilePress}>
-                    <Ionicons name="person-circle-outline" size={28} color={COLORS.white} />
+                  <TouchableOpacity 
+                    style={styles.profileButton} 
+                    onPress={handleProfilePress}
+                    disabled={isTransitioning}
+                  >
+                    <Ionicons name="person-circle-outline" size={expanded ? 30 : 27} color={COLORS.white} />
                   </TouchableOpacity>
                 </View>
               </View>
               
-              <Animated.View 
-                style={[
-                  styles.financialInfoContainer,
-                  expanded ? styles.expandedFinancialContainer : styles.collapsedFinancialContainer
-                ]}
-              >
+              <Animated.View style={financialContainerStyle}>
                 <Text style={styles.profitLabel}>{profit}</Text>
                 
                 <View style={styles.amountContainer}>
@@ -380,7 +473,14 @@ const HeaderCard: React.FC<HeaderCardProps> = ({
               </Animated.View>
             </View>
           </View>
-        </AnimatedImageBackground>
+
+          {/* Indicador de expansión */}
+          {!expanded && (
+            <View style={styles.expansionIndicatorContainer}>
+              <View style={styles.expansionIndicator} />
+            </View>
+          )}
+        </Animated.View>
       </TouchableOpacity>
     </Animated.View>
   );
@@ -397,7 +497,7 @@ const styles = StyleSheet.create({
     right: 0,
     marginTop: 0,
     marginBottom: 0,
-    backgroundColor: 'transparent',
+    backgroundColor: BACKGROUND_COLOR,
     shadowColor: 'transparent',
     shadowOffset: { width: 0, height: 0 },
     shadowRadius: 0,
@@ -408,50 +508,53 @@ const styles = StyleSheet.create({
   contentWrapper: {
     flex: 1,
     width: '100%',
-    paddingTop: NOTCH_SPACE + 10, // Aumentar para dar más espacio superior
+    paddingTop: IS_IOS ? NOTCH_SPACE + 5 : NOTCH_SPACE + 2, // Aumentar en iOS
     backgroundColor: 'transparent',
+    zIndex: 2, // Colocar por encima del gradiente
+    position: 'relative',
   },
   innerContent: {
     flex: 1,
     padding: 16,
     paddingTop: IS_IOS ? 12 : 10,
-    paddingBottom: 0,
+    paddingBottom: 8, // Agregar padding inferior para espacio con bordes redondeados
     backgroundColor: 'transparent',
+    zIndex: 2,
   },
   topSection: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     backgroundColor: 'transparent',
-    paddingTop: IS_IOS ? 30 : 20,
-    paddingHorizontal: 8,
+    paddingTop: IS_IOS ? 20 : 10, // Aumentar padding superior para evitar el notch
+    paddingHorizontal: 16, // Aumentar padding horizontal para alejar los iconos de los bordes
   },
   expandedTopSection: {
     marginBottom: 16,
     minHeight: 44,
-    paddingTop: IS_IOS ? 30 : 30,
+    paddingTop: IS_IOS ? 30 : 25, // Aumentar cuando expandido
   },
   collapsedTopSection: {
-    marginBottom: 0,
-    minHeight: 44,
-    paddingTop: IS_IOS ? 30 : 30,
+    marginBottom: 5, // Agregar espacio para el indicador
+    minHeight: 50, // Aumentar altura mínima para tener más espacio
+    paddingTop: IS_IOS ? 28 : 20, // Aumentar para posicionar los iconos más abajo
   },
   leftSection: {
     flexDirection: 'row',
     alignItems: 'center',
     flex: 1,
-    gap: 18,
-    paddingLeft: 8,
+    gap: 20, // Aumentar espacio entre iconos
+    paddingLeft: 14, // Mover más a la derecha
   },
   rightSection: {
     alignItems: 'flex-end',
-    paddingRight: 8,
+    paddingRight: 14, // Mover más a la izquierda
   },
   navButton: {
-    padding: 10,
+    padding: 12, // Aumentar el área táctil
   },
   profileButton: {
-    padding: 10,
+    padding: 12, // Aumentar el área táctil
   },
   fullTouchContainer: {
     flex: 1,
@@ -483,7 +586,7 @@ const styles = StyleSheet.create({
   cardContainer: {
     width: '100%',
     height: '100%',
-    backgroundColor: 'transparent',
+    backgroundColor: BACKGROUND_COLOR,
     borderRadius: 0,
     borderTopLeftRadius: 0,
     borderTopRightRadius: 0,
@@ -492,15 +595,30 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
     borderBottomWidth: 0,
     borderWidth: 0,
+    position: 'relative',
   },
-  backgroundImage: {
-    width: '100%',
-    height: '100%',
-    borderBottomLeftRadius: BORDER_RADIUS,
-    borderBottomRightRadius: BORDER_RADIUS,
+  solidBackground: {
     position: 'absolute',
-    top: 30,
-    right: 80,
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: BACKGROUND_COLOR,
+    opacity: 1, // Asegurar que sea visible siempre
+  },
+  dotsImage: {
+    position: 'absolute',
+    width: 130,
+    height: 130,
+    opacity: 0.95,
+  },
+  dotsExpandedPosition: {
+    top: 70,
+    right: 0,
+  },
+  dotsCollapsedPosition: {
+    top: 40,
+    right: 0,
   },
   amountContainer: {
     flexDirection: 'row',
@@ -546,6 +664,7 @@ const styles = StyleSheet.create({
     marginTop: 0,
     marginBottom: 0,
     transform: [{scale: 0.95}],
+    display: 'none', // Ocultar completamente cuando está contraído
   },
   expandedFinancialContainer: {
     opacity: 1,
@@ -555,14 +674,7 @@ const styles = StyleSheet.create({
     marginBottom: 0,
     transform: [{scale: 1}],
     paddingBottom: 0,
-  },
-  overlay: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    backgroundColor: 'rgba(0, 0, 0, 0.4)',
+    display: 'flex', // Mostrar cuando está expandido
   },
   profitPercentage: {
     color: '#4CAF50', // Color verde para beneficios
@@ -571,6 +683,31 @@ const styles = StyleSheet.create({
     marginTop: 5,
     marginBottom: 0,
   },
-  });
+  expansionIndicatorContainer: {
+    position: 'absolute',
+    bottom: 10, // Ajustar para mejor posición
+    left: 0,
+    right: 0,
+    alignItems: 'center',
+    justifyContent: 'center',
+    height: 8,
+    zIndex: 3,
+  },
+  expansionIndicator: {
+    width: 65, // Hacer más ancho para mayor visibilidad
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: 'rgba(255, 255, 255, 0.7)', // Aumentar opacidad para mejor visibilidad
+  },
+  gradientOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    opacity: 0.8,
+    zIndex: 1,
+  },
+});
   
-export default HeaderCard; 
+export default React.memo(HeaderCard); 
