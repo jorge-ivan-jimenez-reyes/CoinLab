@@ -22,24 +22,24 @@ const MainNavigation = () => {
           backgroundColor: COLORS.navBar,
           borderTopColor: COLORS.navBar,
           borderTopWidth: 0,
-          height: 60,
-          paddingBottom: 6,
-          paddingTop: 4,
-          elevation: 0,
-          shadowOpacity: 0,
-          shadowRadius: 0,
-          shadowOffset: { height: 0, width: 0 },
+          height: 75,
+          paddingBottom: 8,
+          paddingTop: 12,
+          elevation: 2,
+          shadowOpacity: 0.1,
+          shadowRadius: 4,
+          shadowOffset: { height: -2, width: 0 },
         },
         tabBarActiveTintColor: COLORS.white,
         tabBarInactiveTintColor: '#777777',
         tabBarLabelStyle: {
           fontSize: 12,
-          fontWeight: '500',
-          marginBottom: 2,
+          fontWeight: '600',
+          marginBottom: 5,
           marginTop: 2,
         },
         tabBarIconStyle: {
-          marginTop: 0,
+          marginTop: -5,
         },
       }}
     >
@@ -49,7 +49,7 @@ const MainNavigation = () => {
         options={{
           tabBarLabel: 'Home',
           tabBarIcon: ({ color, size }) => (
-            <Ionicons name="home-outline" color={color} size={size + 3} />
+            <Ionicons name="home-outline" color={color} size={size + 5} />
           ),
         }}
       />
@@ -60,7 +60,7 @@ const MainNavigation = () => {
         options={{
           tabBarLabel: 'Agentes',
           tabBarIcon: ({ color, size }) => (
-            <Ionicons name="analytics-outline" color={color} size={size + 3} />
+            <Ionicons name="analytics-outline" color={color} size={size + 5} />
           ),
         }}
       />
@@ -71,7 +71,7 @@ const MainNavigation = () => {
         options={{
           tabBarLabel: 'Ayuda',
           tabBarIcon: ({ color, size }) => (
-            <Ionicons name="help-circle-outline" color={color} size={size + 3} />
+            <Ionicons name="help-circle-outline" color={color} size={size + 5} />
           ),
         }}
       />
@@ -82,7 +82,7 @@ const MainNavigation = () => {
         options={{
           tabBarLabel: 'Historial',
           tabBarIcon: ({ color, size }) => (
-            <Ionicons name="time-outline" color={color} size={size + 3} />
+            <Ionicons name="time-outline" color={color} size={size + 5} />
           ),
         }}
       />
