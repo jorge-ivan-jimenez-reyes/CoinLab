@@ -81,7 +81,9 @@ const AgentsScreen = () => {
       profit="Beneficio Total"
       amount={agentPortfolio.totalInvested}
       amountLabel="USD"
-      profitPercentage="+$2,125.78 (5.6%)"
+      profitPercentage={agentPortfolio.totalProfit}
+      currencySymbol="USD"
+      disableColorChange={false}
     >
       <FlatList
         style={styles.flatList}

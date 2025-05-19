@@ -55,6 +55,7 @@ interface HeaderCardProps {
   profitPercentage?: string;
   currencySymbol?: string;
   hideStatusBar?: boolean;
+  disableColorChange?: boolean;
 }
 
 const HeaderCard: React.FC<HeaderCardProps> = ({
@@ -70,6 +71,7 @@ const HeaderCard: React.FC<HeaderCardProps> = ({
   profitPercentage = '',
   currencySymbol = '$',
   hideStatusBar = true, // Ocultar barra de estado por defecto
+  disableColorChange = false,
 }) => {
   const navigation = useNavigation<any>();
   // Usar el contexto global en lugar del estado local
@@ -471,9 +473,25 @@ const HeaderCard: React.FC<HeaderCardProps> = ({
                 
                 {profitPercentage ? (
                   <View style={styles.profitPercentageContainer}>
-                    <Text style={styles.profitPercentage}>{profitPercentage}</Text>
+                    <Text 
+                      style={[
+                        styles.profitPercentage, 
+                        !disableColorChange && profitPercentage.startsWith('+') ? styles.positiveProfit : 
+                        (!disableColorChange && profitPercentage.startsWith('-') ? styles.negativeProfit : null)
+                      ]}
+                    >
+                      {profitPercentage}
+                    </Text>
                     {currencySymbol ? (
-                      <Text style={styles.profitCurrency}>{currencySymbol}</Text>
+                      <Text 
+                        style={[
+                          styles.profitCurrency,
+                          !disableColorChange && profitPercentage.startsWith('+') ? styles.positiveProfit : 
+                          (!disableColorChange && profitPercentage.startsWith('-') ? styles.negativeProfit : null)
+                        ]}
+                      >
+                        {currencySymbol}
+                      </Text>
                     ) : null}
                   </View>
                 ) : null}
@@ -691,18 +709,24 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   profitPercentage: {
-    color: COLORS.white,
     fontSize: 28,
     fontWeight: 'bold',
     marginTop: 5,
     marginBottom: 0,
+    color: COLORS.white, // Default color
+  },
+  positiveProfit: {
+    color: '#4CAF50', // Green color for positive values
+  },
+  negativeProfit: {
+    color: COLORS.error, // Red color for negative values
   },
   profitCurrency: {
-    color: COLORS.white,
     fontSize: 16,
     opacity: 0.9,
     marginLeft: 5,
     marginBottom: 3,
+    color: COLORS.white, // Default color
   },
   expansionIndicatorContainer: {
     position: 'absolute',

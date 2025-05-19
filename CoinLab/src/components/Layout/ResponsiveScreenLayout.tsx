@@ -36,6 +36,7 @@ interface ResponsiveScreenLayoutProps {
   hideStatusBar?: boolean;
   headerOffset?: number;
   contentPadding?: number;
+  disableColorChange?: boolean;
 }
 
 const ResponsiveScreenLayout: React.FC<ResponsiveScreenLayoutProps> = ({
@@ -52,6 +53,7 @@ const ResponsiveScreenLayout: React.FC<ResponsiveScreenLayoutProps> = ({
   hideStatusBar = true,
   headerOffset = 0,
   contentPadding = 15,
+  disableColorChange = false,
 }) => {
   // Usar el estado global del header
   const { isHeaderExpanded } = useHeader();
@@ -106,6 +108,7 @@ const ResponsiveScreenLayout: React.FC<ResponsiveScreenLayoutProps> = ({
           currencySymbol={currencySymbol}
           hideStatusBar={hideStatusBar}
           onHeightChange={handleHeaderHeightChange}
+          disableColorChange={disableColorChange}
         />
       </View>
       

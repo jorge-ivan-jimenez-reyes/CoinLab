@@ -152,6 +152,7 @@ const HomeScreen = () => {
       currencySymbol="USD"
       backgroundImage={IMAGES.CARD_BACKGROUND}
       showBackButton={false}
+      disableColorChange={true}
     >
       <ScrollView
         style={styles.scrollView}
