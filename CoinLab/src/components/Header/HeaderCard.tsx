@@ -19,7 +19,7 @@ const IS_IOS = Platform.OS === 'ios';
 const NOTCH_SPACE = IS_IOS ? 50 : StatusBar.currentHeight || 0; // Aumentar más el espacio para el notch
 
 // Ajustar alturas basadas en el tamaño de la pantalla - Más espacio vertical
-const COLLAPSED_HEIGHT = Math.min(height * 0.12, 110) + NOTCH_SPACE; // Aumentar altura cuando está contraído
+const COLLAPSED_HEIGHT = Math.min(height * 0.15, 110) + NOTCH_SPACE; // Aumentar altura cuando está contraído
 const EXPANDED_HEIGHT = height * 0.39 + NOTCH_SPACE; // Mantener para modo expandido
 const DRAG_THRESHOLD = 20;
 
