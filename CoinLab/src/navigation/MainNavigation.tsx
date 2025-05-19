@@ -7,6 +7,7 @@ import HomeScreen from '../screens/Main/HomeScreen';
 import AgentsScreen from '../screens/Main/AgentsScreen';
 import HelpScreen from '../screens/Main/HelpScreen';
 import HistoryScreen from '../screens/Main/HistoryScreen';
+import ProfileScreen from '../screens/Main/ProfileScreen';
 
 // Theme
 import COLORS from '../theme/colors';

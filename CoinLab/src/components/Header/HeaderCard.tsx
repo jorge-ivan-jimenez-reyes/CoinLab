@@ -295,8 +295,8 @@ const HeaderCard: React.FC<HeaderCardProps> = ({
         routes: [{ name: 'Auth' }],
       });
     } else {
-      // Aquí puedes agregar navegación al perfil cuando se implemente
-      // navigation.navigate('Profile');
+      // Navigate to ProfileScreen
+      navigation.navigate('Profile');
     }
   }, [navigation, isAuthenticated]);
   

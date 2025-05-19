@@ -6,6 +6,9 @@ import AuthNavigation from './AuthNavigation';
 import AgentDetailScreen from '../screens/Main/AgentDetailScreen';
 import CreateAgentScreen from '../screens/Main/CreateAgentScreen';
 import HelpDetailScreen from '../screens/Main/HelpDetailScreen';
+import ProfileScreen from '../screens/Main/ProfileScreen';
+import SecurityCenterScreen from '../screens/Main/SecurityCenterScreen';
+import PersonalDataScreen from '../screens/Main/PersonalDataScreen';
 import { useAuth } from '../context/AuthContext';
 
 // Define stack navigator params
@@ -15,6 +18,9 @@ export type RootStackParamList = {
   AgentDetail: { agentId: string };
   CreateAgent: undefined;
   HelpDetail: { title: string; questionId: string };
+  Profile: undefined;
+  SecurityCenter: undefined;
+  PersonalData: undefined;
 };
 
 const Stack = createStackNavigator<RootStackParamList>();
@@ -34,6 +40,9 @@ const AppNavigation = () => {
             <Stack.Screen name="AgentDetail" component={AgentDetailScreen} />
             <Stack.Screen name="CreateAgent" component={CreateAgentScreen} />
             <Stack.Screen name="HelpDetail" component={HelpDetailScreen} />
+            <Stack.Screen name="Profile" component={ProfileScreen} />
+            <Stack.Screen name="SecurityCenter" component={SecurityCenterScreen} />
+            <Stack.Screen name="PersonalData" component={PersonalDataScreen} />
           </>
         ) : (
           <Stack.Screen name="Auth" component={AuthNavigation} />
