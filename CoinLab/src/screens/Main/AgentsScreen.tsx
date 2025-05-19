@@ -43,16 +43,7 @@ const AgentsScreen = () => {
   );
 
   const handleAddAgent = () => {
-    const newAgent = {
-      name: 'Nuevo Agente',
-      description: 'Descripción del nuevo agente',
-      status: 'inactive' as const,
-      investment: '0.00',
-      profit: '+0.00',
-      profitPercentage: '+0.00%'
-    };
-    
-    addAgent(newAgent);
+    navigation.navigate('CreateAgent');
   };
 
   const HeaderComponent = () => (

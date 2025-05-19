@@ -4,6 +4,7 @@ import { createStackNavigator } from '@react-navigation/stack';
 import MainNavigation from './MainNavigation';
 import AuthNavigation from './AuthNavigation';
 import AgentDetailScreen from '../screens/Main/AgentDetailScreen';
+import CreateAgentScreen from '../screens/Main/CreateAgentScreen';
 import { useAuth } from '../context/AuthContext';
 
 // Define stack navigator params
@@ -11,6 +12,7 @@ export type RootStackParamList = {
   Main: undefined;
   Auth: undefined;
   AgentDetail: { agentId: string };
+  CreateAgent: undefined;
 };
 
 const Stack = createStackNavigator<RootStackParamList>();
@@ -28,6 +30,7 @@ const AppNavigation = () => {
           <>
             <Stack.Screen name="Main" component={MainNavigation} />
             <Stack.Screen name="AgentDetail" component={AgentDetailScreen} />
+            <Stack.Screen name="CreateAgent" component={CreateAgentScreen} />
           </>
         ) : (
           <Stack.Screen name="Auth" component={AuthNavigation} />
