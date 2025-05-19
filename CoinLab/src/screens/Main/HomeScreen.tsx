@@ -144,11 +144,14 @@ const HomeScreen = () => {
 
   return (
     <ResponsiveScreenLayout
-      title={`Welcome back, ${user.name}`}
+      title="Welcome Back"
+      amount={user.name}
+      amountLabel=""
+      profit="Cantidad disponible"
+      profitPercentage={user.availableBalance}
+      currencySymbol="USD"
       backgroundImage={IMAGES.CARD_BACKGROUND}
-      profit="Balance Disponible"
-      amount={user.availableBalance}
-      amountLabel={user.currency}
+      showBackButton={false}
     >
       <ScrollView
         style={styles.scrollView}

@@ -456,19 +456,26 @@ const HeaderCard: React.FC<HeaderCardProps> = ({
               </View>
               
               <Animated.View style={financialContainerStyle}>
-                <Text style={styles.profitLabel}>{profit}</Text>
+                {title ? (
+                  <Text style={styles.titleText}>{title}</Text>
+                ) : null}
                 
                 <View style={styles.amountContainer}>
                   <Text style={styles.amountText}>{amount}</Text>
                   <Text style={styles.currencyText}> {amountLabel}</Text>
                 </View>
                 
-                {profitPercentage ? (
-                  <Text style={styles.profitPercentage}>{profitPercentage}</Text>
+                {profit ? (
+                  <Text style={styles.profitLabel}>{profit}</Text>
                 ) : null}
                 
-                {title ? (
-                  <Text style={styles.titleText}>{title}</Text>
+                {profitPercentage ? (
+                  <View style={styles.profitPercentageContainer}>
+                    <Text style={styles.profitPercentage}>{profitPercentage}</Text>
+                    {currencySymbol ? (
+                      <Text style={styles.profitCurrency}>{currencySymbol}</Text>
+                    ) : null}
+                  </View>
                 ) : null}
               </Animated.View>
             </View>
@@ -647,15 +654,17 @@ const styles = StyleSheet.create({
     color: COLORS.white,
     fontSize: 16,
     opacity: 0.8,
-    marginBottom: 8,
+    marginBottom: 0,
+    marginTop: 10,
     includeFontPadding: false,
   },
   titleText: {
     color: COLORS.white,
-    fontSize: 16,
-    opacity: 0.8,
-    marginTop: 15,
-    marginBottom: 0,
+    fontSize: 20,
+    fontWeight: 'bold',
+    opacity: 0.9,
+    marginTop: 0,
+    marginBottom: 5,
   },
   collapsedFinancialContainer: {
     opacity: 0,
@@ -676,12 +685,24 @@ const styles = StyleSheet.create({
     paddingBottom: 0,
     display: 'flex', // Mostrar cuando está expandido
   },
+  profitPercentageContainer: {
+    flexDirection: 'row',
+    alignItems: 'flex-end',
+    justifyContent: 'center',
+  },
   profitPercentage: {
-    color: '#4CAF50', // Color verde para beneficios
-    fontSize: 18,
+    color: COLORS.white,
+    fontSize: 28,
     fontWeight: 'bold',
     marginTop: 5,
     marginBottom: 0,
+  },
+  profitCurrency: {
+    color: COLORS.white,
+    fontSize: 16,
+    opacity: 0.9,
+    marginLeft: 5,
+    marginBottom: 3,
   },
   expansionIndicatorContainer: {
     position: 'absolute',
