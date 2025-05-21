@@ -8,7 +8,7 @@ import { useHeader } from '../../context/HeaderContext';
 import { useAuth } from '../../context/AuthContext';
 
 // Obtener las dimensiones de la pantalla y ajustar dinámicamente
-const { width, height } = Dimensions.get('window');
+const { width: screenWidth, height } = Dimensions.get('window');
 
 // Definimos los colores para el gradiente - Fondo oscuro para coincidir con el diseño
 const GRADIENT_COLORS = ['#4543EA', '#38B6FF'] as const;
@@ -24,7 +24,7 @@ const EXPANDED_HEIGHT = height * 0.39 + NOTCH_SPACE; // Mantener para modo expan
 const DRAG_THRESHOLD = 20;
 
 // Valor fijo para el border radius
-const BORDER_RADIUS = 35; // Valor intermedio más equilibrado
+const BORDER_RADIUS = 20; // Valor reducido para bordes menos pronunciados
 
 // Configuración de animación para una experiencia fluida
 const SPRING_CONFIG = {
@@ -98,7 +98,7 @@ const HeaderCard: React.FC<HeaderCardProps> = ({
   [expanded]);
 
   // Calcular valores animados para mejorar el efecto visual
-  const scaleAnim = useRef(new Animated.Value(expanded ? 1 : 0.98)).current;
+  const scaleAnim = useRef(new Animated.Value(1)).current;
   const borderRadiusAnim = useRef(new Animated.Value(BORDER_RADIUS)).current;
   
   // Notificar altura actual al padre - evitar notificaciones innecesarias
@@ -258,7 +258,7 @@ const HeaderCard: React.FC<HeaderCardProps> = ({
 
       // Animar la escala para el efecto visual
       const scaleAnimation = Animated.timing(scaleAnim, {
-        toValue: expanded ? 1 : 0.98,
+        toValue: expanded ? 1 : 1, // Always 1 to maintain full width
         duration: 300,
         useNativeDriver: false, // Set to false for consistency
       });
@@ -342,6 +342,9 @@ const HeaderCard: React.FC<HeaderCardProps> = ({
       borderWidth: 0,
       backgroundColor: 'transparent', // Añadir color de fondo aquí también
       overflow: 'hidden' as const, // Asegurar que no se desborde el contenido
+      width: screenWidth,
+      left: 0,
+      right: 0,
     } 
   ], [dynamicHeight]);
 
@@ -357,8 +360,11 @@ const HeaderCard: React.FC<HeaderCardProps> = ({
         { scale: scaleAnim }
       ],
       opacity: 1, // Asegurar que sea visible siempre
+      width: screenWidth,
+      left: 0,
+      right: 0,
     }
-  ], [dynamicHeight, scaleAnim]);
+  ], [dynamicHeight, scaleAnim, screenWidth]);
 
   // Memoizar el estilo de la sección superior
   const topSectionStyle = useMemo(() => [
@@ -522,6 +528,8 @@ const styles = StyleSheet.create({
     right: 0,
     marginTop: 0,
     marginBottom: 0,
+    paddingHorizontal: 0,
+    marginHorizontal: 0,
     backgroundColor: 'transparent',
     shadowColor: 'transparent',
     shadowOffset: { width: 0, height: 0 },
@@ -540,9 +548,10 @@ const styles = StyleSheet.create({
   },
   innerContent: {
     flex: 1,
-    padding: 16,
+    padding: 12,
     paddingTop: IS_IOS ? 12 : 10,
     paddingBottom: 8, // Agregar padding inferior para espacio con bordes redondeados
+    paddingHorizontal: 10,
     backgroundColor: 'transparent',
     zIndex: 2,
   },
@@ -552,7 +561,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: 'transparent',
     paddingTop: IS_IOS ? 20 : 10, // Aumentar padding superior para evitar el notch
-    paddingHorizontal: 16, // Aumentar padding horizontal para alejar los iconos de los bordes
+    paddingHorizontal: 8, // Reducir padding horizontal para usar más espacio
   },
   expandedTopSection: {
     marginBottom: 16,
@@ -585,6 +594,10 @@ const styles = StyleSheet.create({
     flex: 1,
     width: '100%',
     height: '100%',
+    left: 0,
+    right: 0,
+    marginHorizontal: 0,
+    paddingHorizontal: 0,
   },
   dragIndicatorContainer: {
     width: 0,
@@ -611,7 +624,7 @@ const styles = StyleSheet.create({
   cardContainer: {
     width: '100%',
     height: '100%',
-    backgroundColor: BACKGROUND_COLOR,
+    backgroundColor: 'transparent',
     borderRadius: 0,
     borderTopLeftRadius: 0,
     borderTopRightRadius: 0,
@@ -621,6 +634,8 @@ const styles = StyleSheet.create({
     borderBottomWidth: 0,
     borderWidth: 0,
     position: 'relative',
+    marginHorizontal: 0,
+    paddingHorizontal: 0,
   },
   solidBackground: {
     position: 'absolute',
@@ -754,6 +769,7 @@ const styles = StyleSheet.create({
     zIndex: 1,
     borderBottomLeftRadius: BORDER_RADIUS,
     borderBottomRightRadius: BORDER_RADIUS,
+    width: '100%',
   },
 });
   
