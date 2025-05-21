@@ -1,6 +1,8 @@
 import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Ionicons } from 'react-native-vector-icons';
+import { StyleSheet, View } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 
 // Screens
 import HomeScreen from '../screens/Main/HomeScreen';
@@ -20,19 +22,28 @@ const MainNavigation = () => {
       screenOptions={{
         headerShown: false,
         tabBarStyle: {
-          backgroundColor: COLORS.navBar,
-          borderTopColor: COLORS.navBar,
+          backgroundColor: 'transparent',
+          borderTopColor: 'transparent',
           borderTopWidth: 0,
           height: 75,
           paddingBottom: 8,
           paddingTop: 12,
-          elevation: 2,
-          shadowOpacity: 0.1,
-          shadowRadius: 4,
-          shadowOffset: { height: -2, width: 0 },
+          elevation: 0,
+          shadowOpacity: 0,
+          shadowRadius: 0,
+          shadowOffset: { height: 0, width: 0 },
+          position: 'absolute',
         },
+        tabBarBackground: () => (
+          <LinearGradient
+            colors={[COLORS.gradientStart, COLORS.gradientEnd]}
+            style={styles.tabBarGradient}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 0 }}
+          />
+        ),
         tabBarActiveTintColor: COLORS.white,
-        tabBarInactiveTintColor: '#777777',
+        tabBarInactiveTintColor: 'rgba(255, 255, 255, 0.7)',
         tabBarLabelStyle: {
           fontSize: 12,
           fontWeight: '600',
@@ -90,5 +101,14 @@ const MainNavigation = () => {
     </Tab.Navigator>
   );
 };
+
+const styles = StyleSheet.create({
+  tabBarGradient: {
+    height: '100%',
+    width: '100%',
+    borderTopLeftRadius: 0,
+    borderTopRightRadius: 0,
+  },
+});
 
 export default MainNavigation; 

@@ -11,8 +11,8 @@ import { useAuth } from '../../context/AuthContext';
 const { width, height } = Dimensions.get('window');
 
 // Definimos los colores para el gradiente - Fondo oscuro para coincidir con el diseño
-const GRADIENT_COLORS = ['rgba(30, 30, 36, 0.9)', 'rgba(30, 30, 36, 0.95)', 'rgba(30, 30, 36, 1)'] as const;
-const BACKGROUND_COLOR = '#1E1E24';
+const GRADIENT_COLORS = ['#4543EA', '#38B6FF'] as const;
+const BACKGROUND_COLOR = '#4543EA';
 
 // Manejo del espacio superior para distintas plataformas
 const IS_IOS = Platform.OS === 'ios';
@@ -340,7 +340,7 @@ const HeaderCard: React.FC<HeaderCardProps> = ({
       borderBottomRightRadius: BORDER_RADIUS, // Mantener bordes redondeados siempre
       borderBottomWidth: 0,
       borderWidth: 0,
-      backgroundColor: BACKGROUND_COLOR, // Añadir color de fondo aquí también
+      backgroundColor: 'transparent', // Añadir color de fondo aquí también
       overflow: 'hidden' as const, // Asegurar que no se desborde el contenido
     } 
   ], [dynamicHeight]);
@@ -350,7 +350,7 @@ const HeaderCard: React.FC<HeaderCardProps> = ({
     styles.cardContainer, 
     { 
       height: dynamicHeight, // Height animation requires useNativeDriver: false
-      backgroundColor: BACKGROUND_COLOR,
+      backgroundColor: 'transparent',
       borderBottomLeftRadius: BORDER_RADIUS, // Mantener bordes redondeados siempre
       borderBottomRightRadius: BORDER_RADIUS, // Mantener bordes redondeados siempre
       transform: [
@@ -393,14 +393,14 @@ const HeaderCard: React.FC<HeaderCardProps> = ({
       <TouchableOpacity
         activeOpacity={0.9}
         delayPressIn={0}
-        style={[styles.fullTouchContainer, { backgroundColor: BACKGROUND_COLOR }]}
+        style={[styles.fullTouchContainer, { backgroundColor: 'transparent' }]}
         {...panResponder.panHandlers}
         onPress={() => !isTransitioning && toggleExpanded()}
         disabled={isTransitioning}
       >
         <Animated.View style={animatedCardStyle}>
           {/* Garantizar que el fondo sea consistente */}
-          <View style={[styles.solidBackground, { backgroundColor: BACKGROUND_COLOR }]} />
+          <View style={[styles.solidBackground, { backgroundColor: 'transparent' }]} />
           
           {/* Imagen de puntos */}
           <Image 
@@ -411,10 +411,10 @@ const HeaderCard: React.FC<HeaderCardProps> = ({
           
           {/* Gradiente para mejorar la visualización */}
           <LinearGradient
-            colors={GRADIENT_COLORS}
-            style={gradientStyle}
+            colors={[COLORS.gradientStart, COLORS.gradientEnd]}
+            style={styles.gradientOverlay}
             start={{ x: 0, y: 0 }}
-            end={{ x: 0, y: 1 }}
+            end={{ x: 1, y: 0 }}
           />
           
           <View style={styles.contentWrapper}>
@@ -522,7 +522,7 @@ const styles = StyleSheet.create({
     right: 0,
     marginTop: 0,
     marginBottom: 0,
-    backgroundColor: BACKGROUND_COLOR,
+    backgroundColor: 'transparent',
     shadowColor: 'transparent',
     shadowOffset: { width: 0, height: 0 },
     shadowRadius: 0,
@@ -716,10 +716,10 @@ const styles = StyleSheet.create({
     color: COLORS.white, // Default color
   },
   positiveProfit: {
-    color: '#4CAF50', // Green color for positive values
+    color: '#38B6FF', // Updated color for positive values to match gradient end
   },
   negativeProfit: {
-    color: COLORS.error, // Red color for negative values
+    color: COLORS.error, // Keep red color for negative values
   },
   profitCurrency: {
     fontSize: 16,
@@ -742,7 +742,7 @@ const styles = StyleSheet.create({
     width: 65, // Hacer más ancho para mayor visibilidad
     height: 6,
     borderRadius: 3,
-    backgroundColor: 'rgba(255, 255, 255, 0.7)', // Aumentar opacidad para mejor visibilidad
+    backgroundColor: '#FFFFFF', // Cambiar a blanco sólido para mejor contraste
   },
   gradientOverlay: {
     position: 'absolute',
@@ -750,8 +750,10 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     bottom: 0,
-    opacity: 0.8,
+    opacity: 1,
     zIndex: 1,
+    borderBottomLeftRadius: BORDER_RADIUS,
+    borderBottomRightRadius: BORDER_RADIUS,
   },
 });
   

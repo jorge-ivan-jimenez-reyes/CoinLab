@@ -11,6 +11,10 @@ export const COLORS = {
   success: '#34C759', // Verde para éxito
   warning: '#FFCC00', // Amarillo para advertencias
   textLight: '#666666', // Gris para textos secundarios
+  
+  // New gradient colors
+  gradientStart: '#4543EA', // Start color for gradients
+  gradientEnd: '#38B6FF', // End color for gradients
 };
 
 export default COLORS; 
